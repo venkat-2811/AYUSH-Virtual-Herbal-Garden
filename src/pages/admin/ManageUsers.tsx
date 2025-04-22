@@ -1,140 +1,182 @@
 
 import React, { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogClose,
-} from "@/components/ui/dialog";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Label } from "@/components/ui/label";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "@/components/ui/sonner";
-import { Search, MoreHorizontal, User, Plus, AlertCircle } from "lucide-react";
-import type { User } from "@/types";
+import { Plus, Edit, Search, Lock, UserCog } from "lucide-react";
 
-// Mock user data for display
-const mockUsers: User[] = [
-  { id: "1", name: "John Doe", email: "john@example.com", role: "user" },
-  { id: "2", name: "Jane Smith", email: "jane@example.com", role: "admin" },
-  { id: "3", name: "Alex Johnson", email: "alex@example.com", role: "user" },
-  { id: "4", name: "Samantha Brown", email: "sam@example.com", role: "user" },
-  { id: "5", name: "Mike Wilson", email: "mike@example.com", role: "user" },
+interface UserType {
+  id: string;
+  email: string;
+  name: string;
+  role: "user" | "admin";
+  registeredAt: Date;
+  lastLogin: Date | null;
+  status: "active" | "inactive" | "banned";
+}
+
+const mockUsers: UserType[] = [
+  {
+    id: "1",
+    email: "admin@example.com",
+    name: "Admin User",
+    role: "admin",
+    registeredAt: new Date(2023, 1, 15),
+    lastLogin: new Date(),
+    status: "active",
+  },
+  {
+    id: "2",
+    email: "john.doe@example.com",
+    name: "John Doe",
+    role: "user",
+    registeredAt: new Date(2023, 3, 10),
+    lastLogin: new Date(2023, 10, 20),
+    status: "active",
+  },
+  {
+    id: "3",
+    email: "jane.smith@example.com",
+    name: "Jane Smith",
+    role: "user",
+    registeredAt: new Date(2023, 5, 22),
+    lastLogin: new Date(2023, 11, 30),
+    status: "active",
+  },
 ];
 
 const AdminUsers: React.FC = () => {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedRole, setSelectedRole] = useState<"all" | "user" | "admin">("all");
-  const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [userToDelete, setUserToDelete] = useState<User | null>(null);
+  const [users] = useState<UserType[]>(mockUsers);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isResetPasswordDialogOpen, setIsResetPasswordDialogOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState<UserType | null>(null);
   
-  const { data: users, isLoading } = useQuery({
-    queryKey: ['users', searchQuery, selectedRole],
-    queryFn: async () => {
-      // Simulate API call with delay
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // Filter users based on search and role
-      return mockUsers.filter(user => {
-        const matchesSearch = !searchQuery || 
-          user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          user.email.toLowerCase().includes(searchQuery.toLowerCase());
-          
-        const matchesRole = selectedRole === "all" || user.role === selectedRole;
-        
-        return matchesSearch && matchesRole;
-      });
-    },
-    initialData: []
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    role: "user" as "user" | "admin",
+    status: "active" as "active" | "inactive" | "banned",
   });
 
-  const handleRoleChange = (userId: string, newRole: "user" | "admin") => {
-    toast(`User role updated to ${newRole}`);
+  const filteredUsers = users.filter((user) =>
+    user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.email.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const toggleSelectUser = (userId: string) => {
-    setSelectedUsers(prev => 
-      prev.includes(userId) 
-        ? prev.filter(id => id !== userId)
-        : [...prev, userId]
-    );
+  const handleSelectChange = (name: string, value: string) => {
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const toggleSelectAll = () => {
-    if (selectedUsers.length === users.length) {
-      setSelectedUsers([]);
-    } else {
-      setSelectedUsers(users.map(user => user.id));
-    }
+  const resetForm = () => {
+    setFormData({
+      name: "",
+      email: "",
+      role: "user",
+      status: "active",
+    });
   };
 
-  const handleDeleteUser = (user: User) => {
-    setUserToDelete(user);
-    setDeleteDialogOpen(true);
+  const handleAddUser = () => {
+    // In a real app, we would add the user to Supabase
+    toast.success("User added successfully");
+    setIsAddDialogOpen(false);
+    resetForm();
   };
 
-  const confirmDeleteUser = () => {
-    if (userToDelete) {
-      toast(`User ${userToDelete.name} deleted`);
-      setDeleteDialogOpen(false);
-      setUserToDelete(null);
-    }
+  const handleEditUser = () => {
+    // In a real app, we would update the user in Supabase
+    toast.success("User updated successfully");
+    setIsEditDialogOpen(false);
+  };
+
+  const handleResetPassword = () => {
+    // In a real app, we would send a password reset email
+    toast.success("Password reset email sent");
+    setIsResetPasswordDialogOpen(false);
+  };
+
+  const openEditDialog = (user: UserType) => {
+    setCurrentUser(user);
+    setFormData({
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      status: user.status,
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  const openResetPasswordDialog = (user: UserType) => {
+    setCurrentUser(user);
+    setIsResetPasswordDialogOpen(true);
   };
 
   return (
-    <div className="container max-w-6xl mx-auto py-8">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold text-herb-800">Manage Users</h1>
-        <Dialog>
+    <div className="container mx-auto py-8">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+        <div>
+          <h1 className="text-3xl font-bold text-herb-800 mb-2">Manage Users</h1>
+          <p className="text-herb-600">Add, edit, or manage user accounts</p>
+        </div>
+        
+        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
-            <Button>
+            <Button className="whitespace-nowrap">
               <Plus className="mr-2 h-4 w-4" />
-              Add User
+              Add New User
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Add New User</DialogTitle>
+              <DialogDescription>
+                Enter the details for the new user. An invitation email will be sent.
+              </DialogDescription>
             </DialogHeader>
-            <div className="space-y-4 py-4">
+            
+            <div className="grid gap-4 py-4">
               <div className="space-y-2">
-                <label htmlFor="name">Name</label>
-                <Input id="name" placeholder="Full name" />
+                <Label htmlFor="name">Name</Label>
+                <Input
+                  id="name"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  placeholder="Full name"
+                />
               </div>
+              
               <div className="space-y-2">
-                <label htmlFor="email">Email</label>
-                <Input id="email" type="email" placeholder="Email address" />
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  placeholder="Email address"
+                />
               </div>
+              
               <div className="space-y-2">
-                <label htmlFor="role">Role</label>
-                <Select defaultValue="user">
+                <Label htmlFor="role">Role</Label>
+                <Select
+                  value={formData.role}
+                  onValueChange={(value) => handleSelectChange("role", value)}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Select role" />
                   </SelectTrigger>
@@ -145,191 +187,203 @@ const AdminUsers: React.FC = () => {
                 </Select>
               </div>
             </div>
+            
             <DialogFooter>
-              <DialogClose asChild>
-                <Button variant="outline">Cancel</Button>
-              </DialogClose>
-              <Button onClick={() => toast("User added successfully!")}>
-                Add User
+              <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+                Cancel
               </Button>
+              <Button onClick={handleAddUser}>Add User</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
       
-      {/* Search and Filter */}
-      <div className="bg-white rounded-lg shadow p-4 mb-6">
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="flex items-center relative flex-1">
-            <Search className="absolute left-3 text-herb-500 h-4 w-4" />
-            <Input
-              className="pl-10"
-              placeholder="Search users..."
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-            />
+      <Card>
+        <CardHeader>
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <CardTitle>User Accounts</CardTitle>
+            <div className="relative w-full md:max-w-xs">
+              <Input
+                placeholder="Search users..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pr-8"
+              />
+              <Search className="absolute right-2 top-2.5 h-4 w-4 text-herb-500" />
+            </div>
           </div>
-          <div className="w-full md:w-48">
-            <Select
-              value={selectedRole}
-              onValueChange={(value) => setSelectedRole(value as any)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Filter by role" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Roles</SelectItem>
-                <SelectItem value="user">Users</SelectItem>
-                <SelectItem value="admin">Admins</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-      </div>
-      
-      {/* Users Table */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-12">
-                <Checkbox
-                  checked={selectedUsers.length === users.length && users.length > 0}
-                  onCheckedChange={toggleSelectAll}
-                  aria-label="Select all"
-                />
-              </TableHead>
-              <TableHead>Name</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
-              // Loading skeleton
-              Array.from({ length: 5 }).map((_, i) => (
-                <TableRow key={i}>
-                  <TableCell><Skeleton className="h-4 w-4" /></TableCell>
-                  <TableCell><Skeleton className="h-5 w-40" /></TableCell>
-                  <TableCell><Skeleton className="h-5 w-56" /></TableCell>
-                  <TableCell><Skeleton className="h-5 w-24" /></TableCell>
-                  <TableCell><Skeleton className="h-8 w-8 ml-auto" /></TableCell>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead className="hidden md:table-cell">Role</TableHead>
+                  <TableHead className="hidden lg:table-cell">Status</TableHead>
+                  <TableHead className="hidden lg:table-cell">Registered</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
-              ))
-            ) : users.length > 0 ? (
-              users.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell>
-                    <Checkbox
-                      checked={selectedUsers.includes(user.id)}
-                      onCheckedChange={() => toggleSelectUser(user.id)}
-                      aria-label={`Select ${user.name}`}
-                    />
-                  </TableCell>
-                  <TableCell className="font-medium">
-                    <div className="flex items-center">
-                      <div className="h-8 w-8 rounded-full bg-herb-100 text-herb-600 flex items-center justify-center mr-3">
-                        <User className="h-4 w-4" />
-                      </div>
-                      {user.name}
-                    </div>
-                  </TableCell>
-                  <TableCell>{user.email}</TableCell>
-                  <TableCell>
-                    <div className={`inline-block px-2 py-1 rounded-full text-xs ${
-                      user.role === "admin" 
-                        ? "bg-herb-100 text-herb-800" 
-                        : "bg-gray-100 text-gray-800"
-                    }`}>
-                      {user.role}
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                          <span className="sr-only">Open menu</span>
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem 
-                          onClick={() => handleRoleChange(
-                            user.id, 
-                            user.role === "admin" ? "user" : "admin"
-                          )}
-                        >
-                          {user.role === "admin" ? "Make User" : "Make Admin"}
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          className="text-red-600"
-                          onClick={() => handleDeleteUser(user)}
-                        >
-                          Delete User
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={5} className="text-center py-8">
-                  <div className="text-herb-500 mb-2">No users found</div>
-                  <div className="text-herb-400 text-sm">
-                    {searchQuery || selectedRole !== "all" 
-                      ? "Try changing your search criteria" 
-                      : "Add your first user to get started"}
-                  </div>
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
-      
-      {/* Bulk Actions */}
-      {selectedUsers.length > 0 && (
-        <div className="mt-4 bg-herb-50 rounded-lg p-2 flex items-center justify-between">
-          <div className="text-herb-700">
-            {selectedUsers.length} user{selectedUsers.length > 1 ? 's' : ''} selected
+              </TableHeader>
+              <TableBody>
+                {filteredUsers.map((user) => (
+                  <TableRow key={user.id}>
+                    <TableCell>{user.name}</TableCell>
+                    <TableCell>{user.email}</TableCell>
+                    <TableCell className="hidden md:table-cell">
+                      <Badge variant={user.role === "admin" ? "default" : "outline"}>
+                        {user.role === "admin" ? "Admin" : "User"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="hidden lg:table-cell">
+                      <Badge
+                        variant={
+                          user.status === "active"
+                            ? "success"
+                            : user.status === "inactive"
+                            ? "outline"
+                            : "destructive"
+                        }
+                      >
+                        {user.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="hidden lg:table-cell">
+                      {user.registeredAt.toLocaleDateString()}
+                    </TableCell>
+                    <TableCell className="text-right space-x-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => openResetPasswordDialog(user)}
+                        title="Reset Password"
+                      >
+                        <Lock className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => openEditDialog(user)}
+                        title="Edit User"
+                      >
+                        <UserCog className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+                
+                {filteredUsers.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                      No users found
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => setSelectedUsers([])}>
-              Clear Selection
-            </Button>
-            <Button variant="outline" size="sm">
-              Set Role
-            </Button>
-            <Button variant="destructive" size="sm">
-              Delete
-            </Button>
-          </div>
-        </div>
-      )}
+        </CardContent>
+      </Card>
       
-      {/* Delete User Confirmation Dialog */}
-      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle className="flex items-center text-red-600">
-              <AlertCircle className="h-5 w-5 mr-2" />
-              Delete User
-            </DialogTitle>
+            <DialogTitle>Edit User</DialogTitle>
+            <DialogDescription>
+              Update the user details and permissions.
+            </DialogDescription>
           </DialogHeader>
-          <div className="py-4">
-            <p>Are you sure you want to delete <strong>{userToDelete?.name}</strong>?</p>
-            <p className="text-sm text-muted-foreground mt-2">This action cannot be undone.</p>
+          
+          <div className="grid gap-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-name">Name</Label>
+              <Input
+                id="edit-name"
+                name="name"
+                value={formData.name}
+                onChange={handleInputChange}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="edit-email">Email</Label>
+              <Input
+                id="edit-email"
+                name="email"
+                value={formData.email}
+                onChange={handleInputChange}
+                disabled
+              />
+              <p className="text-xs text-herb-500">Email cannot be changed</p>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="edit-role">Role</Label>
+              <Select
+                value={formData.role}
+                onValueChange={(value) => handleSelectChange("role", value as "user" | "admin")}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="user">User</SelectItem>
+                  <SelectItem value="admin">Admin</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="edit-status">Status</Label>
+              <Select
+                value={formData.status}
+                onValueChange={(value) => 
+                  handleSelectChange("status", value as "active" | "inactive" | "banned")
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="inactive">Inactive</SelectItem>
+                  <SelectItem value="banned">Banned</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
+          
           <DialogFooter>
-            <DialogClose asChild>
-              <Button variant="outline">Cancel</Button>
-            </DialogClose>
-            <Button variant="destructive" onClick={confirmDeleteUser}>
-              Delete
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+              Cancel
             </Button>
+            <Button onClick={handleEditUser}>Update User</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      <Dialog open={isResetPasswordDialogOpen} onOpenChange={setIsResetPasswordDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reset Password</DialogTitle>
+            <DialogDescription>
+              Send a password reset email to {currentUser?.email}.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="py-4">
+            <p>
+              The user will receive an email with a link to reset their password.
+              This link will expire after 24 hours.
+            </p>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsResetPasswordDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleResetPassword}>Send Reset Email</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -1,6 +1,6 @@
 
 import React from "react";
-import { useHerb } from "@/contexts/HerbContext";
+import { useHerbs } from "@/contexts/HerbContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
@@ -10,7 +10,7 @@ import { toast } from "@/components/ui/sonner";
 
 const UserCollection: React.FC = () => {
   const { user } = useAuth();
-  const { collection, removeFromCollection } = useHerb();
+  const { collection, removeFromCollection } = useHerbs();
   
   const handleRemove = (id: string) => {
     removeFromCollection(id);

@@ -9,13 +9,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/sonner";
 import { useAuth } from "@/contexts/AuthContext";
-import { useHerb } from "@/contexts/HerbContext";
+import { useHerbs } from "@/contexts/HerbContext";
 import type { Herb } from "@/types";
 
 const HerbDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
-  const { addToCollection } = useHerb();
+  const { addToCollection } = useHerbs();
   
   const { data: herb, isLoading } = useQuery({
     queryKey: ['herb', id],
