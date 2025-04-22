@@ -61,7 +61,41 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
-				}
+				},
+        // AYUSH Herbal Garden Theme Colors
+        herb: {
+          50: '#f0f9eb',
+          100: '#dcf0d0',
+          200: '#b9e1a3',
+          300: '#91ce71',
+          400: '#6eb848',
+          500: '#4f9a2c',
+          600: '#3a7b21',
+          700: '#2c611d',
+          800: '#254d1c',
+          900: '#214219',
+          950: '#0d2409',
+        },
+        earth: {
+          50: '#f9f6f0',
+          100: '#f0e9db',
+          200: '#e2d1b7',
+          300: '#d0b38d',
+          400: '#c09b6f',
+          500: '#b4855b',
+          600: '#a26e4d',
+          700: '#865442',
+          800: '#70463c',
+          900: '#5e3c35',
+          950: '#321e1b',
+        },
+        ayush: {
+          light: '#f5efe1', // light beige for backgrounds
+          main: '#4f9a2c', // herbal green for primary elements
+          dark: '#214219', // dark green for text/accents
+          accent: '#b4855b', // earth brown for accents
+          highlight: '#91ce71', // light green for highlights
+        }
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
