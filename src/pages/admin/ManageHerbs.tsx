@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -31,6 +31,41 @@ const AdminHerbs: React.FC = () => {
     modelUrl: "",
   });
   const [uploading, setUploading] = useState(false);
+  const [bucketExists, setBucketExists] = useState(false);
+
+  // Check if the bucket exists when component mounts
+  useEffect(() => {
+    const checkBucket = async () => {
+      try {
+        const { data, error } = await supabase.storage.getBucket('herb-models');
+        if (error) {
+          console.error('Error checking bucket:', error);
+          // If bucket doesn't exist, create it
+          if (error.message.includes("not found")) {
+            const { data: createData, error: createError } = await supabase.storage.createBucket('herb-models', {
+              public: true
+            });
+            
+            if (createError) {
+              console.error('Error creating bucket:', createError);
+              toast.error('Error creating storage bucket. Please contact administrator.');
+            } else {
+              console.log('Bucket created successfully:', createData);
+              setBucketExists(true);
+              toast.success('Storage bucket initialized successfully');
+            }
+          }
+        } else {
+          console.log('Bucket exists:', data);
+          setBucketExists(true);
+        }
+      } catch (err) {
+        console.error('Unexpected error checking bucket:', err);
+      }
+    };
+
+    checkBucket();
+  }, []);
 
   const filteredHerbs = herbs.filter((herb) =>
     herb.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -71,6 +106,22 @@ const AdminHerbs: React.FC = () => {
     let modelUrl = formData.modelUrl;
     if (formData.modelFile) {
       setUploading(true);
+      
+      if (!bucketExists) {
+        // Try to create the bucket if it doesn't exist
+        const { data: createData, error: createError } = await supabase.storage.createBucket('herb-models', {
+          public: true
+        });
+        
+        if (createError) {
+          toast.error(`Failed to create storage bucket: ${createError.message}`);
+          setUploading(false);
+          return;
+        } else {
+          setBucketExists(true);
+        }
+      }
+      
       const fileName = `${formData.name.replace(/\s+/g, "_")}_${Date.now()}.glb`;
       const { data, error } = await supabase.storage
         .from("herb-models")
@@ -78,16 +129,20 @@ const AdminHerbs: React.FC = () => {
           cacheControl: "3600",
           upsert: true,
         });
-      setUploading(false);
-
+      
       if (error) {
-        toast.error("Failed to upload model: " + error.message);
+        console.error("Upload error:", error);
+        toast.error(`Failed to upload model: ${error.message}`);
+        setUploading(false);
         return;
       }
+      
       // Construct public URL
       const { data: urlData } = supabase.storage.from("herb-models").getPublicUrl(fileName);
       modelUrl = urlData.publicUrl;
       toast.success("3D Model uploaded successfully 🎉");
+      
+      setUploading(false);
     }
 
     // In a real app, here the herb would be updated in Supabase with the modelUrl
