@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -25,6 +24,7 @@ import AdminUsers from "./pages/admin/ManageUsers";
 import AdminSettings from "./pages/admin/Settings";
 import Unauthorized from "./pages/Unauthorized";
 import About from "./pages/About";
+import Signup from "./pages/Signup";
 
 // Layout
 import AppLayout from "./components/layout/AppLayout";
@@ -43,6 +43,7 @@ const App = () => (
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/login" element={<Login />} />
+                <Route path="/signup" element={<Signup />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/unauthorized" element={<Unauthorized />} />
                 

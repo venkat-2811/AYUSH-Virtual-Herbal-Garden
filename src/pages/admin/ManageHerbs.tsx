@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,9 +8,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/components/ui/sonner";
-import { Plus, Edit, Trash2, Search } from "lucide-react";
+import { Plus, Edit, Trash2, Search, UploadCloud } from "lucide-react";
 import { useHerbs } from "@/contexts/HerbContext";
 import { Herb } from "@/types";
+import { supabase } from "@/integrations/supabase/client";
 
 const AdminHerbs: React.FC = () => {
   const { herbs } = useHerbs();
@@ -25,7 +27,10 @@ const AdminHerbs: React.FC = () => {
     uses: "",
     regions: "",
     composition: "",
+    modelFile: null as File | null,
+    modelUrl: "",
   });
+  const [uploading, setUploading] = useState(false);
 
   const filteredHerbs = herbs.filter((herb) =>
     herb.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -33,8 +38,12 @@ const AdminHerbs: React.FC = () => {
   );
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    const { name, value, files } = e.target as any;
+    if (name === "modelFile" && files && files[0]) {
+      setFormData((prev) => ({ ...prev, modelFile: files[0] }));
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
   };
 
   const resetForm = () => {
@@ -45,6 +54,8 @@ const AdminHerbs: React.FC = () => {
       uses: "",
       regions: "",
       composition: "",
+      modelFile: null,
+      modelUrl: "",
     });
   };
 
@@ -55,10 +66,34 @@ const AdminHerbs: React.FC = () => {
     resetForm();
   };
 
-  const handleEditHerb = () => {
-    // In a real app, we would update the herb in Supabase
-    toast.success("Herb updated successfully");
+  const handleEditHerb = async () => {
+    // Upload model if selected
+    let modelUrl = formData.modelUrl;
+    if (formData.modelFile) {
+      setUploading(true);
+      const fileName = `${formData.name.replace(/\s+/g, "_")}_${Date.now()}.glb`;
+      const { data, error } = await supabase.storage
+        .from("herb-models")
+        .upload(fileName, formData.modelFile, {
+          cacheControl: "3600",
+          upsert: true,
+        });
+      setUploading(false);
+
+      if (error) {
+        toast.error("Failed to upload model: " + error.message);
+        return;
+      }
+      // Construct public URL
+      const { data: urlData } = supabase.storage.from("herb-models").getPublicUrl(fileName);
+      modelUrl = urlData.publicUrl;
+      toast.success("3D Model uploaded successfully 🎉");
+    }
+
+    // In a real app, here the herb would be updated in Supabase with the modelUrl
     setIsEditDialogOpen(false);
+    resetForm();
+    toast.success("Herb updated successfully" + (modelUrl ? " (with 3D model)" : ""));
   };
 
   const handleDeleteHerb = () => {
@@ -76,6 +111,8 @@ const AdminHerbs: React.FC = () => {
       uses: herb.uses.join(", "),
       regions: herb.region.join(", "),
       composition: herb.composition.join(", "),
+      modelFile: null,
+      modelUrl: herb.modelUrl || "",
     });
     setIsEditDialogOpen(true);
   };
@@ -262,16 +299,15 @@ const AdminHerbs: React.FC = () => {
           </div>
         </CardContent>
       </Card>
-      
+      {/* Edit Herb Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Edit Herb</DialogTitle>
             <DialogDescription>
-              Update the details for this herb.
+              Update the details for this herb. You can also upload a 3D model (.glb file) for this herb.
             </DialogDescription>
           </DialogHeader>
-          
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
             
             <div className="space-y-2">
@@ -342,17 +378,47 @@ const AdminHerbs: React.FC = () => {
               />
               <p className="text-xs text-herb-500">Separate compounds with commas</p>
             </div>
+            <div className="space-y-2 md:col-span-2">
+              <Label htmlFor="edit-model">3D Model (.glb) [Optional]</Label>
+              <Input
+                id="edit-model"
+                name="modelFile"
+                type="file"
+                accept=".glb,model/gltf-binary"
+                onChange={handleInputChange}
+              />
+              {formData.modelUrl && (
+                <a
+                  href={formData.modelUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-herb-600 underline text-xs"
+                >
+                  View Current Model
+                </a>
+              )}
+              <p className="text-xs text-herb-500">
+                Upload a 3D model (GLB). Max size 10MB.
+              </p>
+            </div>
           </div>
-          
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleEditHerb}>Update Herb</Button>
+            <Button onClick={handleEditHerb} disabled={uploading}>
+              {uploading ? (
+                <>
+                  <UploadCloud className="h-4 w-4 mr-1 animate-spin" />
+                  Uploading...
+                </>
+              ) : (
+                <>Update Herb</>
+              )}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>

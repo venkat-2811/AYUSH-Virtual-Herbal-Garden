@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -116,6 +116,11 @@ const Login = () => {
                   >
                     {isLoading ? "Logging in..." : "Login"}
                   </Button>
+                  <div className="flex justify-center">
+                    <Link to="/signup" className="text-sm text-herb-700 underline mt-2">
+                      Don't have an account? Sign Up
+                    </Link>
+                  </div>
                 </div>
               </form>
             </Tabs>
