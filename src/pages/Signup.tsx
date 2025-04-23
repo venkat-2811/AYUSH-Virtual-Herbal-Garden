@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
@@ -8,13 +8,13 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Leaf } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 const Signup = () => {
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const { toast } = useToast();
-  const { login } = useAuth(); // use mock login to store
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -28,28 +28,38 @@ const Signup = () => {
       });
       return;
     }
+    
     setIsLoading(true);
-    // Demo signup: just log in as user
-    // In real app this is a backend call to add user to database
-    const isUser = email === "user@ayush.com";
-    const success = await login(
-      email,
-      password,
-      isUser ? "user" : "user"
-    );
-    setIsLoading(false);
-    if (success) {
-      toast({
-        title: "Account created",
-        description: "Signup successful. Logging you in!",
+    
+    try {
+      // Use Supabase for actual signup
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            name,
+          },
+        },
       });
-      navigate("/dashboard");
-    } else {
+      
+      if (error) throw error;
+      
+      if (data.user) {
+        toast({
+          title: "Account created",
+          description: "Signup successful! You can now login.",
+        });
+        navigate("/login");
+      }
+    } catch (error: any) {
       toast({
         title: "Signup failed",
-        description: "Email already in use or invalid.",
+        description: error.message || "Something went wrong",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -87,7 +97,7 @@ const Signup = () => {
                   <Input
                     id="email"
                     type="email"
-                    placeholder="user@ayush.com"
+                    placeholder="your.email@example.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="border-herb-200"
@@ -117,7 +127,7 @@ const Signup = () => {
           <CardFooter className="justify-center border-t border-herb-100 pt-4">
             <p className="text-sm text-herb-500">
               Already have an account?{" "}
-              <a href="/login" className="underline text-herb-700">Login</a>
+              <Link to="/login" className="underline text-herb-700">Login</Link>
             </p>
           </CardFooter>
         </Card>

@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -25,6 +26,7 @@ import AdminSettings from "./pages/admin/Settings";
 import Unauthorized from "./pages/Unauthorized";
 import About from "./pages/About";
 import Signup from "./pages/Signup";
+import Contact from "./pages/Contact";
 
 // Layout
 import AppLayout from "./components/layout/AppLayout";
@@ -41,17 +43,21 @@ const App = () => (
             <Sonner />
             <BrowserRouter>
               <Routes>
+                {/* Public pages */}
                 <Route path="/" element={<Index />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<Signup />} />
                 <Route path="/about" element={<About />} />
+                <Route path="/contact" element={<Contact />} />
                 <Route path="/unauthorized" element={<Unauthorized />} />
                 
-                {/* User routes */}
-                <Route path="/dashboard" element={<AppLayout requireAuth><UserDashboard /></AppLayout>} />
+                {/* Public page with optional auth */}
                 <Route path="/explore" element={<AppLayout><ExploreHerbs /></AppLayout>} />
-                <Route path="/herb/:id" element={<AppLayout><HerbDetail /></AppLayout>} />
-                <Route path="/chat" element={<AppLayout><ChatPage /></AppLayout>} />
+                
+                {/* Protected user routes */}
+                <Route path="/dashboard" element={<AppLayout requireAuth><UserDashboard /></AppLayout>} />
+                <Route path="/herb/:id" element={<AppLayout requireAuth><HerbDetail /></AppLayout>} />
+                <Route path="/chat" element={<AppLayout requireAuth><ChatPage /></AppLayout>} />
                 <Route path="/search" element={<AppLayout requireAuth><SearchPage /></AppLayout>} />
                 <Route path="/profile" element={<AppLayout requireAuth><UserProfile /></AppLayout>} />
                 <Route path="/collection" element={<AppLayout requireAuth><UserCollection /></AppLayout>} />

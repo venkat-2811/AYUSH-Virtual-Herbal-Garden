@@ -3,12 +3,18 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Leaf, Flower, MessageCircle } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import Navbar from "@/components/layout/Navbar";
 
 const Index = () => {
+  const { user } = useAuth();
+  
   return (
-    <div className="min-h-screen bg-ayush-light">
+    <div className="min-h-screen bg-ayush-light flex flex-col">
+      <Navbar />
+      
       {/* Hero Section */}
-      <section className="relative">
+      <section className="relative flex-grow">
         <div 
           className="absolute inset-0 bg-cover bg-center z-0" 
           style={{ 
@@ -33,17 +39,25 @@ const Index = () => {
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="/explore">
+              <Link to={user ? "/dashboard" : "/explore"}>
                 <Button size="lg" className="bg-herb-500 hover:bg-herb-600">
-                  <Flower className="mr-2 h-5 w-5" /> Explore Garden
+                  <Flower className="mr-2 h-5 w-5" /> {user ? "Go to Dashboard" : "Explore Garden"}
                 </Button>
               </Link>
               
-              <Link to="/login">
-                <Button size="lg" variant="outline" className="border-herb-300 text-herb-700 hover:bg-herb-50">
-                  Login
-                </Button>
-              </Link>
+              {!user ? (
+                <Link to="/signup">
+                  <Button size="lg" variant="outline" className="border-herb-300 text-herb-700 hover:bg-herb-50">
+                    Sign Up
+                  </Button>
+                </Link>
+              ) : (
+                <Link to="/chat">
+                  <Button size="lg" variant="outline" className="border-herb-300 text-herb-700 hover:bg-herb-50">
+                    <MessageCircle className="mr-2 h-5 w-5" /> Chat with Expert
+                  </Button>
+                </Link>
+              )}
             </div>
           </div>
         </div>
@@ -113,9 +127,9 @@ const Index = () => {
             to learn, share, and grow together.
           </p>
           
-          <Link to="/login">
+          <Link to={user ? "/dashboard" : "/signup"}>
             <Button size="lg" className="bg-herb-500 hover:bg-herb-600">
-              Get Started
+              {user ? "Go to Dashboard" : "Get Started"}
             </Button>
           </Link>
         </div>
@@ -123,10 +137,26 @@ const Index = () => {
       
       {/* Footer */}
       <footer className="bg-white border-t border-herb-100 py-8">
-        <div className="container mx-auto px-4 text-center">
-          <p className="text-herb-500">
-            © {new Date().getFullYear()} AYUSH Virtual Herbal Garden. All rights reserved.
-          </p>
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col md:flex-row justify-between items-center">
+            <p className="text-herb-500 mb-4 md:mb-0">
+              © {new Date().getFullYear()} AYUSH Virtual Herbal Garden. All rights reserved.
+            </p>
+            
+            <div className="flex space-x-6">
+              <Link to="/about" className="text-herb-600 hover:text-herb-700">
+                About
+              </Link>
+              <Link to="/contact" className="text-herb-600 hover:text-herb-700">
+                Contact
+              </Link>
+              {!user && (
+                <Link to="/signup" className="text-herb-600 hover:text-herb-700">
+                  Sign Up
+                </Link>
+              )}
+            </div>
+          </div>
         </div>
       </footer>
     </div>

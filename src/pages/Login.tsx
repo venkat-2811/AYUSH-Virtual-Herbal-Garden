@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -14,12 +14,23 @@ const Login = () => {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [role, setRole] = useState<"user" | "admin">("user");
-  const { login, isLoading, error } = useAuth();
+  const { login, isLoading, error, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
   
   const from = (location.state as any)?.from || "/";
+  
+  // If user is already logged in, redirect them
+  useEffect(() => {
+    if (user) {
+      if (user.role === "admin") {
+        navigate("/admin");
+      } else {
+        navigate("/dashboard");
+      }
+    }
+  }, [user, navigate]);
   
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -87,7 +98,7 @@ const Login = () => {
                     <Input
                       id="email"
                       type="email"
-                      placeholder={role === "admin" ? "admin@ayush.com" : "user@ayush.com"}
+                      placeholder={role === "admin" ? "admin@ayush.com" : "your.email@example.com"}
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       className="border-herb-200"
@@ -104,9 +115,11 @@ const Login = () => {
                       onChange={(e) => setPassword(e.target.value)}
                       className="border-herb-200"
                     />
-                    <p className="text-xs text-herb-500 mt-1">
-                      For demo: any password works with the provided emails
-                    </p>
+                    {role === "admin" && (
+                      <p className="text-xs text-herb-500 mt-1">
+                        For demo: any password works with admin@ayush.com
+                      </p>
+                    )}
                   </div>
                   
                   <Button 
@@ -116,6 +129,7 @@ const Login = () => {
                   >
                     {isLoading ? "Logging in..." : "Login"}
                   </Button>
+                  
                   <div className="flex justify-center">
                     <Link to="/signup" className="text-sm text-herb-700 underline mt-2">
                       Don't have an account? Sign Up
@@ -128,7 +142,7 @@ const Login = () => {
           
           <CardFooter className="justify-center border-t border-herb-100 pt-4">
             <p className="text-sm text-herb-500">
-              Demo accounts: user@ayush.com (user) or admin@ayush.com (admin)
+              Demo admin: admin@ayush.com (any password)
             </p>
           </CardFooter>
         </Card>
