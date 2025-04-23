@@ -1,73 +1,25 @@
-# Welcome to your Lovable project
+# AYUSH Virtual Herbal Garden
+## Explore the world of traditional medicinal herbs with interactive 3D models, AI-powered insights, and a wealth of knowledge about herbal medicine.
 
-## Project info
+# Key Features
+**3D Herb Models
+Explore detailed 3D models of medicinal herbs, allowing you to examine their structure from all angles**
 
-**URL**: https://lovable.dev/projects/ce8d02d0-e415-4a77-9b49-23247fcf1ca4
+**AI-Powered Insights
+Get intelligent information about herbs, their properties, and how to cultivate them using our AI system**
 
-## How can I edit this code?
+**Herb Expert Chatbot
+Ask questions and get expert answers about herbal medicine, gardening tips, and more with our specialized chatbot**
 
-There are several ways of editing your application.
+## Our Mission
+**The AYUSH Virtual Herbal Garden is an innovative digital platform dedicated to preserving and spreading knowledge about traditional medicinal herbs. Our mission is to create an accessible, educational resource that bridges the gap between ancient herbal wisdom and modern technology.**
 
-**Use Lovable**
+## What We Offer
+**Interactive 3D Models: Explore detailed three-dimensional representations of medicinal plants to better understand their structure and characteristics.
+AI-Powered Insights: Access intelligent information about herbs, their properties, and cultivation methods through our advanced AI system.
+Comprehensive Database: Browse our extensive collection of herbs with detailed information on uses, properties, and origins.
+Expert Chatbot: Get answers to your questions about herbal medicine, gardening techniques, and traditional uses from our specialized chatbot.
+Search & Filter: Find specific herbs based on various criteria such as region, uses, or chemical composition.**
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/ce8d02d0-e415-4a77-9b49-23247fcf1ca4) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/ce8d02d0-e415-4a77-9b49-23247fcf1ca4) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+## Our Vision
+**We envision a world where traditional herbal knowledge is preserved, accessible, and integrated with modern scientific understanding. By combining cutting-edge technology with ancient wisdom, we aim to promote sustainable practices, natural wellness, and a deeper appreciation for the plant world around us.**
