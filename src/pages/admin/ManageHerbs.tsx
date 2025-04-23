@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,14 +32,12 @@ const AdminHerbs: React.FC = () => {
   const [uploading, setUploading] = useState(false);
   const [bucketExists, setBucketExists] = useState(false);
 
-  // Check if the bucket exists when component mounts
   useEffect(() => {
     const checkBucket = async () => {
       try {
         const { data, error } = await supabase.storage.getBucket('herb-models');
         if (error) {
           console.error('Error checking bucket:', error);
-          // If bucket doesn't exist, create it
           if (error.message.includes("not found")) {
             const { data: createData, error: createError } = await supabase.storage.createBucket('herb-models', {
               public: true
@@ -95,64 +92,53 @@ const AdminHerbs: React.FC = () => {
   };
 
   const handleAddHerb = () => {
-    // In a real app, we would add the herb to Supabase
     toast.success("Herb added successfully");
     setIsAddDialogOpen(false);
     resetForm();
   };
 
   const handleEditHerb = async () => {
-    // Upload model if selected
     let modelUrl = formData.modelUrl;
-    if (formData.modelFile) {
-      setUploading(true);
-      
-      if (!bucketExists) {
-        // Try to create the bucket if it doesn't exist
-        const { data: createData, error: createError } = await supabase.storage.createBucket('herb-models', {
-          public: true
-        });
+    
+    try {
+      if (formData.modelFile) {
+        setUploading(true);
+        const fileName = `${formData.name.replace(/\s+/g, "_")}_${Date.now()}.glb`;
         
-        if (createError) {
-          toast.error(`Failed to create storage bucket: ${createError.message}`);
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from("herb-models")
+          .upload(fileName, formData.modelFile, {
+            cacheControl: "3600",
+            upsert: true,
+          });
+        
+        if (uploadError) {
+          console.error("Upload error:", uploadError);
+          toast.error(`Failed to upload model: ${uploadError.message}`);
           setUploading(false);
           return;
-        } else {
-          setBucketExists(true);
         }
+        
+        const { data: urlData } = supabase.storage
+          .from("herb-models")
+          .getPublicUrl(fileName);
+        
+        modelUrl = urlData.publicUrl;
+        toast.success("3D Model uploaded successfully 🎉");
       }
       
-      const fileName = `${formData.name.replace(/\s+/g, "_")}_${Date.now()}.glb`;
-      const { data, error } = await supabase.storage
-        .from("herb-models")
-        .upload(fileName, formData.modelFile, {
-          cacheControl: "3600",
-          upsert: true,
-        });
-      
-      if (error) {
-        console.error("Upload error:", error);
-        toast.error(`Failed to upload model: ${error.message}`);
-        setUploading(false);
-        return;
-      }
-      
-      // Construct public URL
-      const { data: urlData } = supabase.storage.from("herb-models").getPublicUrl(fileName);
-      modelUrl = urlData.publicUrl;
-      toast.success("3D Model uploaded successfully 🎉");
-      
+      setIsEditDialogOpen(false);
+      resetForm();
+      toast.success("Herb updated successfully" + (modelUrl ? " with 3D model" : ""));
+    } catch (error: any) {
+      console.error("Error handling herb update:", error);
+      toast.error(`An error occurred: ${error.message}`);
+    } finally {
       setUploading(false);
     }
-
-    // In a real app, here the herb would be updated in Supabase with the modelUrl
-    setIsEditDialogOpen(false);
-    resetForm();
-    toast.success("Herb updated successfully" + (modelUrl ? " (with 3D model)" : ""));
   };
 
   const handleDeleteHerb = () => {
-    // In a real app, we would delete the herb from Supabase
     toast.success("Herb deleted successfully");
     setIsDeleteDialogOpen(false);
   };
@@ -354,7 +340,6 @@ const AdminHerbs: React.FC = () => {
           </div>
         </CardContent>
       </Card>
-      {/* Edit Herb Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent>
           <DialogHeader>
