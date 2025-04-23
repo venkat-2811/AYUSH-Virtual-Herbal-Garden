@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -124,6 +123,12 @@ const AdminUsers: React.FC = () => {
     setIsResetPasswordDialogOpen(true);
   };
 
+  const getStatusVariant = (status: string) => {
+    if (status === "active") return "default";
+    if (status === "inactive") return "outline";
+    return "destructive";
+  };
+
   return (
     <div className="container mx-auto py-8">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
@@ -237,15 +242,7 @@ const AdminUsers: React.FC = () => {
                       </Badge>
                     </TableCell>
                     <TableCell className="hidden lg:table-cell">
-                      <Badge
-                        variant={
-                          user.status === "active"
-                            ? "success"
-                            : user.status === "inactive"
-                            ? "outline"
-                            : "destructive"
-                        }
-                      >
+                      <Badge variant={getStatusVariant(user.status)}>
                         {user.status}
                       </Badge>
                     </TableCell>

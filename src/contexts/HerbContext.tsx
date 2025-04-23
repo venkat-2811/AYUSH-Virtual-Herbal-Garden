@@ -14,6 +14,9 @@ interface HerbContextType {
   setFilters: (filters: SearchFilters) => void;
   filteredHerbs: Herb[];
   refreshHerbs: () => void;
+  collection: Herb[];
+  addToCollection: (herb: Herb) => void;
+  removeFromCollection: (id: string) => void;
 }
 
 const HerbContext = createContext<HerbContextType | undefined>(undefined);
@@ -25,6 +28,7 @@ export function HerbProvider({ children }: { children: React.ReactNode }) {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [filters, setFilters] = useState<SearchFilters>({});
   const [filteredHerbs, setFilteredHerbs] = useState<Herb[]>(HERBS_DATA);
+  const [collection, setCollection] = useState<Herb[]>([]);
 
   // Effect for handling search and filters
   useEffect(() => {
@@ -55,6 +59,20 @@ export function HerbProvider({ children }: { children: React.ReactNode }) {
     setFilteredHerbs([...HERBS_DATA]);
   };
 
+  const addToCollection = (herb: Herb) => {
+    setCollection(prev => {
+      // Check if herb already exists in collection
+      if (prev.some(item => item.id === herb.id)) {
+        return prev;
+      }
+      return [...prev, herb];
+    });
+  };
+
+  const removeFromCollection = (id: string) => {
+    setCollection(prev => prev.filter(herb => herb.id !== id));
+  };
+
   return (
     <HerbContext.Provider 
       value={{
@@ -68,6 +86,9 @@ export function HerbProvider({ children }: { children: React.ReactNode }) {
         setFilters,
         filteredHerbs,
         refreshHerbs,
+        collection,
+        addToCollection,
+        removeFromCollection,
       }}
     >
       {children}
