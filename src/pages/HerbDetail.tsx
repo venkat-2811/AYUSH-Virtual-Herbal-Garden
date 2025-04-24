@@ -4,7 +4,7 @@ import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
-import { Leaf, MapPin, FlaskConical, Heart, View3d } from "lucide-react";
+import { Leaf, MapPin, FlaskConical, Heart, Box } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/sonner";
@@ -101,7 +101,7 @@ const HerbDetail: React.FC = () => {
                   size="sm"
                   onClick={() => setShowModel(true)}
                 >
-                  <View3d className="mr-2 h-4 w-4" />
+                  <Box className="mr-2 h-4 w-4" />
                   View 3D Model
                 </Button>
               </div>
