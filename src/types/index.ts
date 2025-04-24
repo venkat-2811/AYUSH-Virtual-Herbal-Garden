@@ -1,4 +1,3 @@
-
 export type UserRole = "user" | "admin";
 
 export interface User {
@@ -34,4 +33,15 @@ export interface SearchFilters {
   region?: string[];
   uses?: string[];
   composition?: string[];
+}
+
+export interface GLTFResult {
+  scene: THREE.Group;
+  scenes: THREE.Group[];
+  animations: THREE.AnimationClip[];
+  cameras: THREE.Camera[];
+  asset: {
+    generator: string;
+    version: string;
+  };
 }
