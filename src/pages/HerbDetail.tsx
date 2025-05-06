@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -35,8 +34,8 @@ const HerbDetail: React.FC = () => {
           region: ["India", "Southeast Asia"],
           composition: ["Eugenol", "Ursolic acid", "Carvacrol"],
           images: ["/placeholder.svg"],
-          // Using a publicly available sample model that should work
-          modelUrl: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Duck/glTF/Duck.gltf",
+          // Using the local tulsi glb from the project root
+          modelUrl: "/tulsi_tree_on_a_cement_tub.compressed.glb",
           createdAt: new Date(),
           updatedAt: new Date()
         }
@@ -199,10 +198,10 @@ const HerbDetail: React.FC = () => {
       <Dialog open={showModel} onOpenChange={setShowModel}>
         <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
-            <DialogTitle>{herb.name} - 3D Model</DialogTitle>
+            <DialogTitle>{herb?.name} - 3D Model</DialogTitle>
           </DialogHeader>
           <div className="h-[500px] w-full">
-            {herb.modelUrl && (
+            {herb?.modelUrl && (
               <ModelViewer 
                 modelUrl={herb.modelUrl}
                 onError={handleModelError}
