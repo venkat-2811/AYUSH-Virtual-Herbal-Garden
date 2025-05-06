@@ -20,9 +20,12 @@ function Model({ url, onError }: ModelProps) {
   
   React.useEffect(() => {
     const loader = new GLTFLoader();
+    console.log("Attempting to load model from URL:", url);
+    
     loader.load(
       url,
       (gltf) => {
+        console.log("Model loaded successfully:", gltf);
         setModel(gltf.scene);
         setLoading(false);
       },
