@@ -3,6 +3,7 @@ import React, { Suspense, useRef } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 
 interface ModelProps {
   url: string;
@@ -11,11 +12,11 @@ interface ModelProps {
 function Model({ url }: ModelProps) {
   const modelRef = useRef<THREE.Group>(null);
   
-  // Load the 3D model using standard Three.js approach
+  // Load the 3D model using Three.js GLTFLoader
   const [model, setModel] = React.useState<THREE.Group | null>(null);
   
   React.useEffect(() => {
-    const loader = new THREE.GLTFLoader();
+    const loader = new GLTFLoader();
     loader.load(
       url,
       (gltf) => {
