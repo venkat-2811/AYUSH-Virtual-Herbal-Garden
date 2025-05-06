@@ -1,17 +1,34 @@
 
 import React, { Suspense, useRef } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { Environment, OrbitControls, useGLTF } from "@react-three/drei";
+import { OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
-import { GLTFResult } from "@/types";
 
 interface ModelProps {
   url: string;
 }
 
 function Model({ url }: ModelProps) {
-  const gltf = useGLTF(url) as GLTFResult;
   const modelRef = useRef<THREE.Group>(null);
+  
+  // Load the 3D model using standard Three.js approach
+  const [model, setModel] = React.useState<THREE.Group | null>(null);
+  
+  React.useEffect(() => {
+    const loader = new THREE.GLTFLoader();
+    loader.load(
+      url,
+      (gltf) => {
+        setModel(gltf.scene);
+      },
+      (progress) => {
+        console.log(`Loading model: ${(progress.loaded / progress.total) * 100}% loaded`);
+      },
+      (error) => {
+        console.error('Error loading model:', error);
+      }
+    );
+  }, [url]);
 
   useFrame(() => {
     if (modelRef.current) {
@@ -21,11 +38,7 @@ function Model({ url }: ModelProps) {
 
   return (
     <group ref={modelRef}>
-      <primitive 
-        object={gltf.scene} 
-        scale={2} 
-        position={[0, -1, 0]} 
-      />
+      {model && <primitive object={model} scale={2} position={[0, -1, 0]} />}
     </group>
   );
 }
@@ -36,6 +49,20 @@ interface ModelViewerProps {
 }
 
 const ModelViewer: React.FC<ModelViewerProps> = ({ modelUrl, onError }) => {
+  // Error handling
+  React.useEffect(() => {
+    const handleError = () => {
+      if (onError) {
+        onError();
+      }
+    };
+    
+    window.addEventListener('error', handleError);
+    return () => {
+      window.removeEventListener('error', handleError);
+    };
+  }, [onError]);
+
   return (
     <div className="w-full h-full aspect-square bg-herb-50 rounded-lg overflow-hidden relative">
       <Canvas
@@ -46,7 +73,6 @@ const ModelViewer: React.FC<ModelViewerProps> = ({ modelUrl, onError }) => {
         <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} intensity={1} castShadow />
         <Suspense fallback={null}>
           <Model url={modelUrl} />
-          <Environment preset="sunset" />
         </Suspense>
         <OrbitControls 
           enableZoom={true} 

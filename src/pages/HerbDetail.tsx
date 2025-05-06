@@ -34,7 +34,7 @@ const HerbDetail: React.FC = () => {
           region: ["India", "Southeast Asia"],
           composition: ["Eugenol", "Ursolic acid", "Carvacrol"],
           images: ["/placeholder.svg"],
-          modelUrl: "/placeholder.svg",
+          modelUrl: "https://storage.googleapis.com/uxfolio/5f1035ea3c4fe10004863f0b/5f64c70e3ee712000456a097/mnE8W9LngVrzLV0eOG5A.glb", // Added a sample glTF URL
           createdAt: new Date(),
           updatedAt: new Date()
         }
@@ -54,6 +54,11 @@ const HerbDetail: React.FC = () => {
       addToCollection(herb);
       toast("Added to your collection!");
     }
+  };
+
+  // Add model loading error handler
+  const handleModelError = () => {
+    toast.error("Failed to load 3D model. Please try again later.");
   };
 
   if (isLoading) {
@@ -196,7 +201,7 @@ const HerbDetail: React.FC = () => {
             {herb.modelUrl && (
               <ModelViewer 
                 modelUrl={herb.modelUrl}
-                onError={() => toast.error("Failed to load 3D model")}
+                onError={handleModelError}
               />
             )}
           </div>
