@@ -19,6 +19,7 @@ const HerbDetail: React.FC = () => {
   const { user } = useAuth();
   const { addToCollection } = useHerbs();
   const [showModel, setShowModel] = useState(false);
+  const [modelLoadError, setModelLoadError] = useState(false);
   
   const { data: herb, isLoading } = useQuery({
     queryKey: ['herb', id],
@@ -34,7 +35,8 @@ const HerbDetail: React.FC = () => {
           region: ["India", "Southeast Asia"],
           composition: ["Eugenol", "Ursolic acid", "Carvacrol"],
           images: ["/placeholder.svg"],
-          modelUrl: "https://storage.googleapis.com/uxfolio/5f1035ea3c4fe10004863f0b/5f64c70e3ee712000456a097/mnE8W9LngVrzLV0eOG5A.glb", // Added a sample glTF URL
+          // Using a publicly available sample model that should work
+          modelUrl: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Duck/glTF/Duck.gltf",
           createdAt: new Date(),
           updatedAt: new Date()
         }
@@ -58,6 +60,7 @@ const HerbDetail: React.FC = () => {
 
   // Add model loading error handler
   const handleModelError = () => {
+    setModelLoadError(true);
     toast.error("Failed to load 3D model. Please try again later.");
   };
 
@@ -105,6 +108,7 @@ const HerbDetail: React.FC = () => {
                   variant="outline" 
                   size="sm"
                   onClick={() => setShowModel(true)}
+                  disabled={modelLoadError}
                 >
                   <Box className="mr-2 h-4 w-4" />
                   View 3D Model
