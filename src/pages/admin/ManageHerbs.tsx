@@ -30,38 +30,24 @@ const AdminHerbs: React.FC = () => {
     modelUrl: "",
   });
   const [uploading, setUploading] = useState(false);
-  const [bucketExists, setBucketExists] = useState(false);
 
   useEffect(() => {
-    const checkBucket = async () => {
+    const checkBuckets = async () => {
       try {
-        const { data, error } = await supabase.storage.getBucket('herb-models');
-        if (error) {
-          console.error('Error checking bucket:', error);
-          if (error.message.includes("not found")) {
-            const { data: createData, error: createError } = await supabase.storage.createBucket('herb-models', {
-              public: true
-            });
-            
-            if (createError) {
-              console.error('Error creating bucket:', createError);
-              toast.error('Error creating storage bucket. Please contact administrator.');
-            } else {
-              console.log('Bucket created successfully:', createData);
-              setBucketExists(true);
-              toast.success('Storage bucket initialized successfully');
-            }
-          }
-        } else {
-          console.log('Bucket exists:', data);
-          setBucketExists(true);
-        }
+        // Just log the status of the buckets, don't try to create them
+        console.log("Checking for plant-models bucket...");
+        const { data: modelsData, error: modelsError } = await supabase.storage.getBucket('plant-models');
+        console.log("Models bucket check result:", { data: modelsData, error: modelsError });
+        
+        console.log("Checking for plant-images bucket...");
+        const { data: imagesData, error: imagesError } = await supabase.storage.getBucket('plant-images');
+        console.log("Images bucket check result:", { data: imagesData, error: imagesError });
       } catch (err) {
-        console.error('Unexpected error checking bucket:', err);
+        console.error('Unexpected error checking buckets:', err);
       }
     };
 
-    checkBucket();
+    checkBuckets();
   }, []);
 
   const filteredHerbs = herbs.filter((herb) =>
@@ -103,10 +89,14 @@ const AdminHerbs: React.FC = () => {
     try {
       if (formData.modelFile) {
         setUploading(true);
-        const fileName = `${formData.name.replace(/\s+/g, "_")}_${Date.now()}.glb`;
         
+        // Create a safe filename for the model
+        const fileName = `${formData.name.replace(/\s+/g, "_").toLowerCase()}_${Date.now()}.glb`;
+        console.log("Attempting to upload model:", fileName);
+        
+        // Try uploading to the plant-models bucket
         const { data: uploadData, error: uploadError } = await supabase.storage
-          .from("herb-models")
+          .from("plant-models")
           .upload(fileName, formData.modelFile, {
             cacheControl: "3600",
             upsert: true,
@@ -119,13 +109,21 @@ const AdminHerbs: React.FC = () => {
           return;
         }
         
+        // Get the public URL for the uploaded file
         const { data: urlData } = supabase.storage
-          .from("herb-models")
+          .from("plant-models")
           .getPublicUrl(fileName);
         
+        console.log("Upload successful, URL data:", urlData);
         modelUrl = urlData.publicUrl;
         toast.success("3D Model uploaded successfully 🎉");
       }
+      
+      // Here we would update the herb data in a real app
+      console.log("Updated herb data:", {
+        ...formData,
+        modelUrl
+      });
       
       setIsEditDialogOpen(false);
       resetForm();

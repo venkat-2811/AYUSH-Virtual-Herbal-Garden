@@ -1,10 +1,9 @@
-
 import React from "react";
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
-import { Leaf, MapPin, FlaskConical, Heart, View, Eye } from "lucide-react";
+import { Leaf, MapPin, FlaskConical, Heart, Eye } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/sonner";
@@ -13,6 +12,7 @@ import { useHerbs } from "@/contexts/HerbContext";
 import ModelViewer from "@/components/ModelViewer";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import type { Herb } from "@/types";
+import { getHerbById } from "@/data/herbData";
 
 const HerbDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -22,24 +22,8 @@ const HerbDetail: React.FC = () => {
   const { data: herb, isLoading } = useQuery({
     queryKey: ['herb', id],
     queryFn: async () => {
-      // In a real app, we would fetch from Supabase
-      const mockHerbs: Record<string, Herb> = {
-        "1": {
-          id: "1",
-          name: "Tulsi",
-          scientificName: "Ocimum sanctum",
-          description: "Tulsi, also known as Holy Basil, is a sacred plant in Hindu belief. It's widely used for its medicinal properties in Ayurveda.",
-          uses: ["Respiratory disorders", "Stress", "Fever", "Heart disorders"],
-          region: ["India", "Southeast Asia"],
-          composition: ["Eugenol", "Ursolic acid", "Carvacrol"],
-          images: ["/placeholder.svg"],
-          modelUrl: "/models/tulsi.glb",
-          createdAt: new Date(),
-          updatedAt: new Date()
-        }
-      };
-      
-      return mockHerbs[id || "1"] || null;
+      // Use the getHerbById function from herbData to get the herb
+      return id ? getHerbById(id) : null;
     }
   });
 
