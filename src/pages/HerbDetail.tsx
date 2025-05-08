@@ -4,12 +4,14 @@ import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
-import { Leaf, MapPin, FlaskConical, Heart } from "lucide-react";
+import { Leaf, MapPin, FlaskConical, Heart, View, Eye } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useHerbs } from "@/contexts/HerbContext";
+import ModelViewer from "@/components/ModelViewer";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import type { Herb } from "@/types";
 
 const HerbDetail: React.FC = () => {
@@ -31,7 +33,7 @@ const HerbDetail: React.FC = () => {
           region: ["India", "Southeast Asia"],
           composition: ["Eugenol", "Ursolic acid", "Carvacrol"],
           images: ["/placeholder.svg"],
-          modelUrl: "/placeholder.svg",
+          modelUrl: "/models/tulsi.glb",
           createdAt: new Date(),
           updatedAt: new Date()
         }
@@ -86,17 +88,28 @@ const HerbDetail: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
         <div className="bg-white rounded-lg overflow-hidden shadow-lg">
           {herb.modelUrl ? (
-            <div className="aspect-square bg-herb-50 flex items-center justify-center">
+            <div className="aspect-square bg-herb-50 flex items-center justify-center relative">
               <img 
                 src={herb.images[0] || "/placeholder.svg"} 
                 alt={herb.name} 
                 className="w-full h-full object-cover"
               />
-              <div className="absolute bottom-4 right-4">
-                <Button variant="outline" size="sm">
-                  View 3D Model
-                </Button>
-              </div>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm" className="absolute bottom-4 right-4">
+                    <Eye className="mr-2 h-4 w-4" />
+                    View 3D Model
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[800px] h-[80vh]">
+                  <DialogHeader>
+                    <DialogTitle>3D Model: {herb.name}</DialogTitle>
+                  </DialogHeader>
+                  <div className="flex-1 h-full min-h-[500px]">
+                    <ModelViewer modelUrl={herb.modelUrl} />
+                  </div>
+                </DialogContent>
+              </Dialog>
             </div>
           ) : (
             <div className="aspect-square bg-herb-50 flex items-center justify-center">
