@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,11 +7,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/components/ui/sonner";
-import { Plus, Edit, Trash2, Search, UploadCloud, Eye } from "lucide-react";
+import { Plus, Edit, Trash2, Search, UploadCloud } from "lucide-react";
 import { useHerbs } from "@/contexts/HerbContext";
 import { Herb } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
-import ModelViewer from "@/components/ModelViewer";
 
 const AdminHerbs: React.FC = () => {
   const { herbs } = useHerbs();
@@ -20,7 +18,6 @@ const AdminHerbs: React.FC = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isPreviewDialogOpen, setIsPreviewDialogOpen] = useState(false);
   const [currentHerb, setCurrentHerb] = useState<Herb | null>(null);
   const [formData, setFormData] = useState({
     name: "",
@@ -34,8 +31,6 @@ const AdminHerbs: React.FC = () => {
   });
   const [uploading, setUploading] = useState(false);
   const [bucketExists, setBucketExists] = useState(false);
-  const [previewModelUrl, setPreviewModelUrl] = useState<string>("");
-  const [modelLoadError, setModelLoadError] = useState(false);
 
   useEffect(() => {
     const checkBucket = async () => {
@@ -77,18 +72,6 @@ const AdminHerbs: React.FC = () => {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value, files } = e.target as any;
     if (name === "modelFile" && files && files[0]) {
-      // Validate file size (10MB max)
-      if (files[0].size > 10 * 1024 * 1024) {
-        toast.error("File size exceeds 10MB limit. Please choose a smaller file.");
-        return;
-      }
-      
-      // Validate file type
-      if (!files[0].name.toLowerCase().endsWith('.glb')) {
-        toast.error("Only GLB file format is supported.");
-        return;
-      }
-      
       setFormData((prev) => ({ ...prev, modelFile: files[0] }));
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
@@ -106,7 +89,6 @@ const AdminHerbs: React.FC = () => {
       modelFile: null,
       modelUrl: "",
     });
-    setModelLoadError(false);
   };
 
   const handleAddHerb = () => {
@@ -142,7 +124,6 @@ const AdminHerbs: React.FC = () => {
           .getPublicUrl(fileName);
         
         modelUrl = urlData.publicUrl;
-        console.log("Model uploaded successfully. Public URL:", modelUrl);
         toast.success("3D Model uploaded successfully 🎉");
       }
       
@@ -180,20 +161,6 @@ const AdminHerbs: React.FC = () => {
   const openDeleteDialog = (herb: Herb) => {
     setCurrentHerb(herb);
     setIsDeleteDialogOpen(true);
-  };
-
-  const openPreviewDialog = (herb: Herb) => {
-    if (herb.modelUrl) {
-      setPreviewModelUrl(herb.modelUrl);
-      setIsPreviewDialogOpen(true);
-    } else {
-      toast.error("No 3D model available for this herb");
-    }
-  };
-
-  const handleModelError = () => {
-    setModelLoadError(true);
-    toast.error("Failed to load 3D model. The file might be corrupted or in an unsupported format.");
   };
 
   return (
@@ -342,16 +309,6 @@ const AdminHerbs: React.FC = () => {
                       {herb.region.join(", ")}
                     </TableCell>
                     <TableCell className="text-right space-x-2">
-                      {herb.modelUrl && (
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={() => openPreviewDialog(herb)}
-                          title="Preview 3D model"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                      )}
                       <Button 
                         variant="outline" 
                         size="sm" 
@@ -383,9 +340,8 @@ const AdminHerbs: React.FC = () => {
           </div>
         </CardContent>
       </Card>
-      
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="sm:max-w-2xl">
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>Edit Herb</DialogTitle>
             <DialogDescription>
@@ -471,31 +427,15 @@ const AdminHerbs: React.FC = () => {
                 accept=".glb,model/gltf-binary"
                 onChange={handleInputChange}
               />
-              {formData.modelUrl && !modelLoadError && (
-                <div className="flex items-center justify-between">
-                  <a
-                    href={formData.modelUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-herb-600 underline text-xs"
-                  >
-                    View Current Model
-                  </a>
-                  
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => {
-                      if (currentHerb?.modelUrl) {
-                        setPreviewModelUrl(currentHerb.modelUrl);
-                        setIsPreviewDialogOpen(true);
-                      }
-                    }}
-                    className="text-xs"
-                  >
-                    Preview Model
-                  </Button>
-                </div>
+              {formData.modelUrl && (
+                <a
+                  href={formData.modelUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-herb-600 underline text-xs"
+                >
+                  View Current Model
+                </a>
               )}
               <p className="text-xs text-herb-500">
                 Upload a 3D model (GLB). Max size 10MB.
@@ -503,10 +443,7 @@ const AdminHerbs: React.FC = () => {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => {
-              setIsEditDialogOpen(false);
-              resetForm();
-            }}>
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
               Cancel
             </Button>
             <Button onClick={handleEditHerb} disabled={uploading}>
@@ -522,7 +459,6 @@ const AdminHerbs: React.FC = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -543,22 +479,6 @@ const AdminHerbs: React.FC = () => {
               Delete
             </Button>
           </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      
-      <Dialog open={isPreviewDialogOpen} onOpenChange={setIsPreviewDialogOpen}>
-        <DialogContent className="sm:max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>{currentHerb?.name || "Herb"} - 3D Model Preview</DialogTitle>
-          </DialogHeader>
-          <div className="h-[500px] w-full">
-            {previewModelUrl && (
-              <ModelViewer 
-                modelUrl={previewModelUrl}
-                onError={handleModelError}
-              />
-            )}
-          </div>
         </DialogContent>
       </Dialog>
     </div>

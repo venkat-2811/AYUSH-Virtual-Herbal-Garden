@@ -1,24 +1,21 @@
-import React, { useState } from "react";
+
+import React from "react";
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
-import { Leaf, MapPin, FlaskConical, Heart, Box } from "lucide-react";
+import { Leaf, MapPin, FlaskConical, Heart } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useHerbs } from "@/contexts/HerbContext";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import ModelViewer from "@/components/ModelViewer";
 import type { Herb } from "@/types";
 
 const HerbDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const { addToCollection } = useHerbs();
-  const [showModel, setShowModel] = useState(false);
-  const [modelLoadError, setModelLoadError] = useState(false);
   
   const { data: herb, isLoading } = useQuery({
     queryKey: ['herb', id],
@@ -34,8 +31,7 @@ const HerbDetail: React.FC = () => {
           region: ["India", "Southeast Asia"],
           composition: ["Eugenol", "Ursolic acid", "Carvacrol"],
           images: ["/placeholder.svg"],
-          // Using the local tulsi glb from the project root
-          modelUrl: "/tulsi_tree_on_a_cement_tub.compressed.glb",
+          modelUrl: "/placeholder.svg",
           createdAt: new Date(),
           updatedAt: new Date()
         }
@@ -55,12 +51,6 @@ const HerbDetail: React.FC = () => {
       addToCollection(herb);
       toast("Added to your collection!");
     }
-  };
-
-  // Add model loading error handler
-  const handleModelError = () => {
-    setModelLoadError(true);
-    toast.error("Failed to load 3D model. Please try again later.");
   };
 
   if (isLoading) {
@@ -96,20 +86,14 @@ const HerbDetail: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
         <div className="bg-white rounded-lg overflow-hidden shadow-lg">
           {herb.modelUrl ? (
-            <div className="aspect-square bg-herb-50 flex items-center justify-center relative">
+            <div className="aspect-square bg-herb-50 flex items-center justify-center">
               <img 
                 src={herb.images[0] || "/placeholder.svg"} 
                 alt={herb.name} 
                 className="w-full h-full object-cover"
               />
               <div className="absolute bottom-4 right-4">
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => setShowModel(true)}
-                  disabled={modelLoadError}
-                >
-                  <Box className="mr-2 h-4 w-4" />
+                <Button variant="outline" size="sm">
                   View 3D Model
                 </Button>
               </div>
@@ -194,22 +178,6 @@ const HerbDetail: React.FC = () => {
           </CardContent>
         </Card>
       </div>
-
-      <Dialog open={showModel} onOpenChange={setShowModel}>
-        <DialogContent className="sm:max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>{herb?.name} - 3D Model</DialogTitle>
-          </DialogHeader>
-          <div className="h-[500px] w-full">
-            {herb?.modelUrl && (
-              <ModelViewer 
-                modelUrl={herb.modelUrl}
-                onError={handleModelError}
-              />
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
