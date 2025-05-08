@@ -43,6 +43,10 @@ const ModelViewer: React.FC<ModelViewerProps> = ({ modelUrl }) => {
     return /\.(glb|gltf|obj|fbx)$/i.test(modelUrl);
   };
 
+  const handlePointerDown = () => {
+    setIsLoading(false);
+  };
+
   return (
     <div ref={containerRef} className="w-full h-96 bg-herb-50 rounded-lg overflow-hidden relative">
       {!isValidModelUrl() ? (
@@ -57,8 +61,8 @@ const ModelViewer: React.FC<ModelViewerProps> = ({ modelUrl }) => {
             </div>
           )}
           
-          <Canvas camera={{ position: [0, 0, 5], fov: 45 }}>
-            <Suspense fallback={null} onPointerDown={() => setIsLoading(false)}>
+          <Canvas camera={{ position: [0, 0, 5], fov: 45 }} onPointerDown={handlePointerDown}>
+            <Suspense fallback={null}>
               <ambientLight intensity={0.5} />
               <directionalLight position={[10, 10, 5]} intensity={1} />
               <Model modelUrl={modelUrl} />
