@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -17,14 +18,20 @@ import { getHerbById } from "@/data/herbData";
 const HerbDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
-  const { addToCollection } = useHerbs();
+  const { addToCollection, herbs } = useHerbs();
   
   const { data: herb, isLoading } = useQuery({
     queryKey: ['herb', id],
     queryFn: async () => {
-      // Use the getHerbById function from herbData to get the herb
-      return id ? getHerbById(id) : null;
-    }
+      if (!id) return null;
+      
+      const foundHerb = getHerbById(id);
+      if (!foundHerb) {
+        console.error("Herb not found with ID:", id);
+      }
+      return foundHerb;
+    },
+    staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
   const handleAddToCollection = () => {

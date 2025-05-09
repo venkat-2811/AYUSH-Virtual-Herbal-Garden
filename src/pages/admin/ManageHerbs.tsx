@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/components/ui/sonner";
-import { Plus, Edit, Trash2, Search, UploadCloud } from "lucide-react";
+import { Plus, Edit, Trash2, Search, UploadCloud, Image } from "lucide-react";
 import { useHerbs } from "@/contexts/HerbContext";
 import { Herb } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
@@ -28,18 +28,18 @@ const AdminHerbs: React.FC = () => {
     composition: "",
     modelFile: null as File | null,
     modelUrl: "",
+    imageFile: null as File | null,
+    imageUrl: "",
   });
   const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     const checkBuckets = async () => {
       try {
-        // Just log the status of the buckets, don't try to create them
-        console.log("Checking for plant-models bucket...");
+        // Check if buckets exist
         const { data: modelsData, error: modelsError } = await supabase.storage.getBucket('plant-models');
         console.log("Models bucket check result:", { data: modelsData, error: modelsError });
         
-        console.log("Checking for plant-images bucket...");
         const { data: imagesData, error: imagesError } = await supabase.storage.getBucket('plant-images');
         console.log("Images bucket check result:", { data: imagesData, error: imagesError });
       } catch (err) {
@@ -59,6 +59,8 @@ const AdminHerbs: React.FC = () => {
     const { name, value, files } = e.target as any;
     if (name === "modelFile" && files && files[0]) {
       setFormData((prev) => ({ ...prev, modelFile: files[0] }));
+    } else if (name === "imageFile" && files && files[0]) {
+      setFormData((prev) => ({ ...prev, imageFile: files[0] }));
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
     }
@@ -74,27 +76,99 @@ const AdminHerbs: React.FC = () => {
       composition: "",
       modelFile: null,
       modelUrl: "",
+      imageFile: null,
+      imageUrl: "",
     });
   };
 
-  const handleAddHerb = () => {
-    toast.success("Herb added successfully");
-    setIsAddDialogOpen(false);
-    resetForm();
+  const handleAddHerb = async () => {
+    setUploading(true);
+    try {
+      let modelUrl = "";
+      let imageUrl = "";
+      
+      // Upload model if provided
+      if (formData.modelFile) {
+        const fileName = `${formData.name.replace(/\s+/g, "_").toLowerCase()}_${Date.now()}.glb`;
+        
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from("plant-models")
+          .upload(fileName, formData.modelFile, {
+            cacheControl: "3600",
+            upsert: true,
+          });
+        
+        if (uploadError) {
+          console.error("Model upload error:", uploadError);
+          toast.error(`Failed to upload model: ${uploadError.message}`);
+          setUploading(false);
+          return;
+        }
+        
+        const { data: urlData } = supabase.storage
+          .from("plant-models")
+          .getPublicUrl(fileName);
+        
+        modelUrl = urlData.publicUrl;
+      }
+      
+      // Upload image if provided
+      if (formData.imageFile) {
+        const fileName = `${formData.name.replace(/\s+/g, "_").toLowerCase()}_${Date.now()}`;
+        const fileExt = formData.imageFile.name.split('.').pop();
+        const fullFileName = `${fileName}.${fileExt}`;
+        
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from("plant-images")
+          .upload(fullFileName, formData.imageFile, {
+            cacheControl: "3600",
+            upsert: true,
+          });
+        
+        if (uploadError) {
+          console.error("Image upload error:", uploadError);
+          toast.error(`Failed to upload image: ${uploadError.message}`);
+          // Continue with herb creation even if image upload fails
+        } else {
+          const { data: urlData } = supabase.storage
+            .from("plant-images")
+            .getPublicUrl(fullFileName);
+          
+          imageUrl = urlData.publicUrl;
+        }
+      }
+
+      // Here we would create the herb in a real app
+      console.log("New herb data:", {
+        ...formData,
+        modelUrl,
+        imageUrl,
+        uses: formData.uses.split(',').map(item => item.trim()),
+        region: formData.regions.split(',').map(item => item.trim()),
+        composition: formData.composition.split(',').map(item => item.trim()),
+      });
+      
+      toast.success("Herb added successfully" + (modelUrl ? " with 3D model" : "") + (imageUrl ? " with image" : ""));
+      setIsAddDialogOpen(false);
+      resetForm();
+    } catch (error: any) {
+      console.error("Error handling herb creation:", error);
+      toast.error(`An error occurred: ${error.message}`);
+    } finally {
+      setUploading(false);
+    }
   };
 
   const handleEditHerb = async () => {
-    let modelUrl = formData.modelUrl;
-    
+    setUploading(true);
     try {
+      let modelUrl = formData.modelUrl;
+      let imageUrl = formData.imageUrl || (currentHerb?.images?.[0] || "");
+      
+      // Upload 3D model if provided
       if (formData.modelFile) {
-        setUploading(true);
-        
-        // Create a safe filename for the model
         const fileName = `${formData.name.replace(/\s+/g, "_").toLowerCase()}_${Date.now()}.glb`;
-        console.log("Attempting to upload model:", fileName);
         
-        // Try uploading to the plant-models bucket
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from("plant-models")
           .upload(fileName, formData.modelFile, {
@@ -109,25 +183,51 @@ const AdminHerbs: React.FC = () => {
           return;
         }
         
-        // Get the public URL for the uploaded file
         const { data: urlData } = supabase.storage
           .from("plant-models")
           .getPublicUrl(fileName);
         
-        console.log("Upload successful, URL data:", urlData);
         modelUrl = urlData.publicUrl;
-        toast.success("3D Model uploaded successfully 🎉");
+      }
+      
+      // Upload image if provided
+      if (formData.imageFile) {
+        const fileName = `${formData.name.replace(/\s+/g, "_").toLowerCase()}_${Date.now()}`;
+        const fileExt = formData.imageFile.name.split('.').pop();
+        const fullFileName = `${fileName}.${fileExt}`;
+        
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from("plant-images")
+          .upload(fullFileName, formData.imageFile, {
+            cacheControl: "3600",
+            upsert: true,
+          });
+        
+        if (uploadError) {
+          console.error("Image upload error:", uploadError);
+          toast.error(`Failed to upload image: ${uploadError.message}`);
+        } else {
+          const { data: urlData } = supabase.storage
+            .from("plant-images")
+            .getPublicUrl(fullFileName);
+          
+          imageUrl = urlData.publicUrl;
+        }
       }
       
       // Here we would update the herb data in a real app
       console.log("Updated herb data:", {
         ...formData,
-        modelUrl
+        modelUrl,
+        imageUrl,
+        uses: formData.uses.split(',').map(item => item.trim()),
+        region: formData.regions.split(',').map(item => item.trim()),
+        composition: formData.composition.split(',').map(item => item.trim()),
       });
       
       setIsEditDialogOpen(false);
       resetForm();
-      toast.success("Herb updated successfully" + (modelUrl ? " with 3D model" : ""));
+      toast.success("Herb updated successfully" + (modelUrl ? " with 3D model" : "") + (imageUrl ? " with image" : ""));
     } catch (error: any) {
       console.error("Error handling herb update:", error);
       toast.error(`An error occurred: ${error.message}`);
@@ -152,6 +252,8 @@ const AdminHerbs: React.FC = () => {
       composition: herb.composition.join(", "),
       modelFile: null,
       modelUrl: herb.modelUrl || "",
+      imageFile: null,
+      imageUrl: herb.images && herb.images.length > 0 ? herb.images[0] : "",
     });
     setIsEditDialogOpen(true);
   };
@@ -256,13 +358,50 @@ const AdminHerbs: React.FC = () => {
                 />
                 <p className="text-xs text-herb-500">Separate compounds with commas</p>
               </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="add-image">Plant Image [Optional]</Label>
+                <Input
+                  id="add-image"
+                  name="imageFile"
+                  type="file"
+                  accept="image/png,image/jpeg,image/jpg"
+                  onChange={handleInputChange}
+                />
+                <p className="text-xs text-herb-500">
+                  Upload an image (JPG, JPEG, PNG). Max size 5MB.
+                </p>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="add-model">3D Model (.glb) [Optional]</Label>
+                <Input
+                  id="add-model"
+                  name="modelFile"
+                  type="file"
+                  accept=".glb,model/gltf-binary"
+                  onChange={handleInputChange}
+                />
+                <p className="text-xs text-herb-500">
+                  Upload a 3D model (GLB). Max size 10MB.
+                </p>
+              </div>
             </div>
             
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
                 Cancel
               </Button>
-              <Button onClick={handleAddHerb}>Save Herb</Button>
+              <Button onClick={handleAddHerb} disabled={uploading}>
+                {uploading ? (
+                  <>
+                    <UploadCloud className="h-4 w-4 mr-1 animate-spin" />
+                    Uploading...
+                  </>
+                ) : (
+                  <>Save Herb</>
+                )}
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -343,7 +482,7 @@ const AdminHerbs: React.FC = () => {
           <DialogHeader>
             <DialogTitle>Edit Herb</DialogTitle>
             <DialogDescription>
-              Update the details for this herb. You can also upload a 3D model (.glb file) for this herb.
+              Update the details for this herb. You can also upload a 3D model (.glb file) or image for this herb.
             </DialogDescription>
           </DialogHeader>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
@@ -416,6 +555,36 @@ const AdminHerbs: React.FC = () => {
               />
               <p className="text-xs text-herb-500">Separate compounds with commas</p>
             </div>
+            
+            <div className="space-y-2 md:col-span-2">
+              <Label htmlFor="edit-image">Plant Image [Optional]</Label>
+              <Input
+                id="edit-image"
+                name="imageFile"
+                type="file"
+                accept="image/png,image/jpeg,image/jpg"
+                onChange={handleInputChange}
+              />
+              {formData.imageUrl && (
+                <div className="mt-2">
+                  <p className="text-xs text-herb-600 mb-1">Current image:</p>
+                  <div className="relative h-20 w-20 overflow-hidden rounded-md border border-herb-200">
+                    <img
+                      src={formData.imageUrl}
+                      alt="Plant"
+                      className="h-full w-full object-cover"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = "/placeholder.svg";
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+              <p className="text-xs text-herb-500">
+                Upload an image (JPG, JPEG, PNG). Max size 5MB.
+              </p>
+            </div>
+            
             <div className="space-y-2 md:col-span-2">
               <Label htmlFor="edit-model">3D Model (.glb) [Optional]</Label>
               <Input
