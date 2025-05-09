@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +12,7 @@ import { Plus, Edit, Trash2, Search, UploadCloud, Image } from "lucide-react";
 import { useHerbs } from "@/contexts/HerbContext";
 import { Herb } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const AdminHerbs: React.FC = () => {
   const { herbs } = useHerbs();
@@ -32,6 +34,7 @@ const AdminHerbs: React.FC = () => {
     imageUrl: "",
   });
   const [uploading, setUploading] = useState(false);
+  const [activeTab, setActiveTab] = useState("details");
 
   useEffect(() => {
     const checkBuckets = async () => {
@@ -79,6 +82,7 @@ const AdminHerbs: React.FC = () => {
       imageFile: null,
       imageUrl: "",
     });
+    setActiveTab("details");
   };
 
   const handleAddHerb = async () => {
@@ -256,6 +260,7 @@ const AdminHerbs: React.FC = () => {
       imageUrl: herb.images && herb.images.length > 0 ? herb.images[0] : "",
     });
     setIsEditDialogOpen(true);
+    setActiveTab("details");
   };
 
   const openDeleteDialog = (herb: Herb) => {
@@ -278,117 +283,135 @@ const AdminHerbs: React.FC = () => {
               Add New Herb
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-2xl">
+          <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Add New Herb</DialogTitle>
               <DialogDescription>
-                Enter the details for the new herb. All fields are required.
+                Enter the details for the new herb
               </DialogDescription>
             </DialogHeader>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Name</Label>
-                <Input
-                  id="name"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  placeholder="Common name"
-                />
-              </div>
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="details">Details</TabsTrigger>
+                <TabsTrigger value="uses">Uses & Regions</TabsTrigger>
+                <TabsTrigger value="files">Media Files</TabsTrigger>
+              </TabsList>
               
-              <div className="space-y-2">
-                <Label htmlFor="scientificName">Scientific Name</Label>
-                <Input
-                  id="scientificName"
-                  name="scientificName"
-                  value={formData.scientificName}
-                  onChange={handleInputChange}
-                  placeholder="Scientific name"
-                />
-              </div>
+              <TabsContent value="details" className="space-y-4 mt-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Name</Label>
+                    <Input
+                      id="name"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleInputChange}
+                      placeholder="Common name"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="scientificName">Scientific Name</Label>
+                    <Input
+                      id="scientificName"
+                      name="scientificName"
+                      value={formData.scientificName}
+                      onChange={handleInputChange}
+                      placeholder="Scientific name"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2 md:col-span-2">
+                    <Label htmlFor="description">Description</Label>
+                    <Textarea
+                      id="description"
+                      name="description"
+                      value={formData.description}
+                      onChange={handleInputChange}
+                      placeholder="Detailed description of the herb"
+                      rows={3}
+                    />
+                  </div>
+                  
+                  <div className="space-y-2 md:col-span-2">
+                    <Label htmlFor="composition">Chemical Composition</Label>
+                    <Input
+                      id="composition"
+                      name="composition"
+                      value={formData.composition}
+                      onChange={handleInputChange}
+                      placeholder="Comma separated chemical compounds"
+                    />
+                    <p className="text-xs text-herb-500">Separate compounds with commas</p>
+                  </div>
+                </div>
+              </TabsContent>
               
-              <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  name="description"
-                  value={formData.description}
-                  onChange={handleInputChange}
-                  placeholder="Detailed description of the herb"
-                  rows={4}
-                />
-              </div>
+              <TabsContent value="uses" className="space-y-4 mt-4">
+                <div className="grid grid-cols-1 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="uses">Medicinal Uses</Label>
+                    <Textarea
+                      id="uses"
+                      name="uses"
+                      value={formData.uses}
+                      onChange={handleInputChange}
+                      placeholder="Comma separated uses"
+                      rows={3}
+                    />
+                    <p className="text-xs text-herb-500">Separate uses with commas</p>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="regions">Regions</Label>
+                    <Textarea
+                      id="regions"
+                      name="regions"
+                      value={formData.regions}
+                      onChange={handleInputChange}
+                      placeholder="Comma separated regions"
+                      rows={3}
+                    />
+                    <p className="text-xs text-herb-500">Separate regions with commas</p>
+                  </div>
+                </div>
+              </TabsContent>
               
-              <div className="space-y-2">
-                <Label htmlFor="uses">Medicinal Uses</Label>
-                <Textarea
-                  id="uses"
-                  name="uses"
-                  value={formData.uses}
-                  onChange={handleInputChange}
-                  placeholder="Comma separated uses"
-                  rows={2}
-                />
-                <p className="text-xs text-herb-500">Separate uses with commas</p>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="regions">Regions</Label>
-                <Textarea
-                  id="regions"
-                  name="regions"
-                  value={formData.regions}
-                  onChange={handleInputChange}
-                  placeholder="Comma separated regions"
-                  rows={2}
-                />
-                <p className="text-xs text-herb-500">Separate regions with commas</p>
-              </div>
-              
-              <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="composition">Chemical Composition</Label>
-                <Input
-                  id="composition"
-                  name="composition"
-                  value={formData.composition}
-                  onChange={handleInputChange}
-                  placeholder="Comma separated chemical compounds"
-                />
-                <p className="text-xs text-herb-500">Separate compounds with commas</p>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="add-image">Plant Image [Optional]</Label>
-                <Input
-                  id="add-image"
-                  name="imageFile"
-                  type="file"
-                  accept="image/png,image/jpeg,image/jpg"
-                  onChange={handleInputChange}
-                />
-                <p className="text-xs text-herb-500">
-                  Upload an image (JPG, JPEG, PNG). Max size 5MB.
-                </p>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="add-model">3D Model (.glb) [Optional]</Label>
-                <Input
-                  id="add-model"
-                  name="modelFile"
-                  type="file"
-                  accept=".glb,model/gltf-binary"
-                  onChange={handleInputChange}
-                />
-                <p className="text-xs text-herb-500">
-                  Upload a 3D model (GLB). Max size 10MB.
-                </p>
-              </div>
-            </div>
+              <TabsContent value="files" className="space-y-4 mt-4">
+                <div className="grid grid-cols-1 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="add-image">Plant Image [Optional]</Label>
+                    <Input
+                      id="add-image"
+                      name="imageFile"
+                      type="file"
+                      accept="image/png,image/jpeg,image/jpg"
+                      onChange={handleInputChange}
+                    />
+                    <p className="text-xs text-herb-500">
+                      Upload an image (JPG, JPEG, PNG). Max size 5MB.
+                    </p>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="add-model">3D Model (.glb) [Optional]</Label>
+                    <Input
+                      id="add-model"
+                      name="modelFile"
+                      type="file"
+                      accept=".glb,model/gltf-binary"
+                      onChange={handleInputChange}
+                    />
+                    <p className="text-xs text-herb-500">
+                      Upload a 3D model (GLB). Max size 10MB.
+                    </p>
+                  </div>
+                </div>
+              </TabsContent>
+            </Tabs>
             
-            <DialogFooter>
+            <DialogFooter className="mt-4">
               <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
                 Cancel
               </Button>
@@ -477,139 +500,159 @@ const AdminHerbs: React.FC = () => {
           </div>
         </CardContent>
       </Card>
+
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Herb</DialogTitle>
             <DialogDescription>
-              Update the details for this herb. You can also upload a 3D model (.glb file) or image for this herb.
+              Update the details for this herb
             </DialogDescription>
           </DialogHeader>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
+          
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="details">Details</TabsTrigger>
+              <TabsTrigger value="uses">Uses & Regions</TabsTrigger>
+              <TabsTrigger value="files">Media Files</TabsTrigger>
+            </TabsList>
             
-            <div className="space-y-2">
-              <Label htmlFor="edit-name">Name</Label>
-              <Input
-                id="edit-name"
-                name="name"
-                value={formData.name}
-                onChange={handleInputChange}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="edit-scientificName">Scientific Name</Label>
-              <Input
-                id="edit-scientificName"
-                name="scientificName"
-                value={formData.scientificName}
-                onChange={handleInputChange}
-              />
-            </div>
-            
-            <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="edit-description">Description</Label>
-              <Textarea
-                id="edit-description"
-                name="description"
-                value={formData.description}
-                onChange={handleInputChange}
-                rows={4}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="edit-uses">Medicinal Uses</Label>
-              <Textarea
-                id="edit-uses"
-                name="uses"
-                value={formData.uses}
-                onChange={handleInputChange}
-                placeholder="Comma separated uses"
-                rows={2}
-              />
-              <p className="text-xs text-herb-500">Separate uses with commas</p>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="edit-regions">Regions</Label>
-              <Textarea
-                id="edit-regions"
-                name="regions"
-                value={formData.regions}
-                onChange={handleInputChange}
-                placeholder="Comma separated regions"
-                rows={2}
-              />
-              <p className="text-xs text-herb-500">Separate regions with commas</p>
-            </div>
-            
-            <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="edit-composition">Chemical Composition</Label>
-              <Input
-                id="edit-composition"
-                name="composition"
-                value={formData.composition}
-                onChange={handleInputChange}
-                placeholder="Comma separated chemical compounds"
-              />
-              <p className="text-xs text-herb-500">Separate compounds with commas</p>
-            </div>
-            
-            <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="edit-image">Plant Image [Optional]</Label>
-              <Input
-                id="edit-image"
-                name="imageFile"
-                type="file"
-                accept="image/png,image/jpeg,image/jpg"
-                onChange={handleInputChange}
-              />
-              {formData.imageUrl && (
-                <div className="mt-2">
-                  <p className="text-xs text-herb-600 mb-1">Current image:</p>
-                  <div className="relative h-20 w-20 overflow-hidden rounded-md border border-herb-200">
-                    <img
-                      src={formData.imageUrl}
-                      alt="Plant"
-                      className="h-full w-full object-cover"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = "/placeholder.svg";
-                      }}
-                    />
-                  </div>
+            <TabsContent value="details" className="space-y-4 mt-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-name">Name</Label>
+                  <Input
+                    id="edit-name"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                  />
                 </div>
-              )}
-              <p className="text-xs text-herb-500">
-                Upload an image (JPG, JPEG, PNG). Max size 5MB.
-              </p>
-            </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="edit-scientificName">Scientific Name</Label>
+                  <Input
+                    id="edit-scientificName"
+                    name="scientificName"
+                    value={formData.scientificName}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                
+                <div className="space-y-2 md:col-span-2">
+                  <Label htmlFor="edit-description">Description</Label>
+                  <Textarea
+                    id="edit-description"
+                    name="description"
+                    value={formData.description}
+                    onChange={handleInputChange}
+                    rows={3}
+                  />
+                </div>
+                
+                <div className="space-y-2 md:col-span-2">
+                  <Label htmlFor="edit-composition">Chemical Composition</Label>
+                  <Input
+                    id="edit-composition"
+                    name="composition"
+                    value={formData.composition}
+                    onChange={handleInputChange}
+                    placeholder="Comma separated chemical compounds"
+                  />
+                  <p className="text-xs text-herb-500">Separate compounds with commas</p>
+                </div>
+              </div>
+            </TabsContent>
             
-            <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="edit-model">3D Model (.glb) [Optional]</Label>
-              <Input
-                id="edit-model"
-                name="modelFile"
-                type="file"
-                accept=".glb,model/gltf-binary"
-                onChange={handleInputChange}
-              />
-              {formData.modelUrl && (
-                <a
-                  href={formData.modelUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-herb-600 underline text-xs"
-                >
-                  View Current Model
-                </a>
-              )}
-              <p className="text-xs text-herb-500">
-                Upload a 3D model (GLB). Max size 10MB.
-              </p>
-            </div>
-          </div>
-          <DialogFooter>
+            <TabsContent value="uses" className="space-y-4 mt-4">
+              <div className="grid grid-cols-1 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-uses">Medicinal Uses</Label>
+                  <Textarea
+                    id="edit-uses"
+                    name="uses"
+                    value={formData.uses}
+                    onChange={handleInputChange}
+                    placeholder="Comma separated uses"
+                    rows={3}
+                  />
+                  <p className="text-xs text-herb-500">Separate uses with commas</p>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="edit-regions">Regions</Label>
+                  <Textarea
+                    id="edit-regions"
+                    name="regions"
+                    value={formData.regions}
+                    onChange={handleInputChange}
+                    placeholder="Comma separated regions"
+                    rows={3}
+                  />
+                  <p className="text-xs text-herb-500">Separate regions with commas</p>
+                </div>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="files" className="space-y-4 mt-4">
+              <div className="grid grid-cols-1 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-image">Plant Image [Optional]</Label>
+                  <Input
+                    id="edit-image"
+                    name="imageFile"
+                    type="file"
+                    accept="image/png,image/jpeg,image/jpg"
+                    onChange={handleInputChange}
+                  />
+                  {formData.imageUrl && (
+                    <div className="mt-2">
+                      <p className="text-xs text-herb-600 mb-1">Current image:</p>
+                      <div className="relative h-20 w-20 overflow-hidden rounded-md border border-herb-200">
+                        <img
+                          src={formData.imageUrl}
+                          alt="Plant"
+                          className="h-full w-full object-cover"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = "/placeholder.svg";
+                          }}
+                        />
+                      </div>
+                    </div>
+                  )}
+                  <p className="text-xs text-herb-500">
+                    Upload an image (JPG, JPEG, PNG). Max size 5MB.
+                  </p>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="edit-model">3D Model (.glb) [Optional]</Label>
+                  <Input
+                    id="edit-model"
+                    name="modelFile"
+                    type="file"
+                    accept=".glb,model/gltf-binary"
+                    onChange={handleInputChange}
+                  />
+                  {formData.modelUrl && (
+                    <a
+                      href={formData.modelUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-herb-600 underline text-xs"
+                    >
+                      View Current Model
+                    </a>
+                  )}
+                  <p className="text-xs text-herb-500">
+                    Upload a 3D model (GLB). Max size 10MB.
+                  </p>
+                </div>
+              </div>
+            </TabsContent>
+          </Tabs>
+          
+          <DialogFooter className="mt-4">
             <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
               Cancel
             </Button>
@@ -626,6 +669,7 @@ const AdminHerbs: React.FC = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
