@@ -1,10 +1,9 @@
-
 import React from "react";
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
-import { Leaf, MapPin, FlaskConical, Heart, Eye } from "lucide-react";
+import { Leaf, MapPin, FlaskConical, Heart, Eye, View } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/sonner";

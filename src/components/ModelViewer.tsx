@@ -1,8 +1,8 @@
 
-import React, { useState, useRef } from 'react';
-import { Canvas } from '@react-three/fiber';
+import React, { useState, useRef, Suspense } from 'react';
+import { Canvas, useLoader } from '@react-three/fiber';
 import { OrbitControls, useGLTF, Environment, Html } from '@react-three/drei';
-import { Suspense } from 'react';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 
 interface ModelViewerProps {
   modelUrl: string;
@@ -12,15 +12,17 @@ interface ModelViewerProps {
 const Model = ({ modelUrl }: { modelUrl: string }) => {
   const [error, setError] = useState<string | null>(null);
   
-  // Handle loading errors
   try {
+    // Use useGLTF for better performance
     const { scene } = useGLTF(modelUrl);
-    return <primitive object={scene} dispose={null} />;
+    return <primitive object={scene} />;
   } catch (err) {
+    // Handle loading errors
     if (!error) {
       console.error("Error loading model:", err);
       setError(`Failed to load model: ${err instanceof Error ? err.message : String(err)}`);
     }
+    
     return (
       <Html>
         <div className="p-4 bg-red-50 text-red-700 rounded-lg">
@@ -34,8 +36,7 @@ const Model = ({ modelUrl }: { modelUrl: string }) => {
 const ModelViewer: React.FC<ModelViewerProps> = ({ modelUrl }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [loadError, setLoadError] = useState<string | null>(null);
-
+  
   // Validate model URL and file extension
   const isValidModelUrl = () => {
     if (!modelUrl) return false;
@@ -48,7 +49,7 @@ const ModelViewer: React.FC<ModelViewerProps> = ({ modelUrl }) => {
   };
 
   return (
-    <div ref={containerRef} className="w-full h-96 bg-herb-50 rounded-lg overflow-hidden relative">
+    <div ref={containerRef} className="w-full h-full bg-herb-50 rounded-lg overflow-hidden relative">
       {!isValidModelUrl() ? (
         <div className="absolute inset-0 flex items-center justify-center text-herb-500">
           No valid 3D model available
@@ -56,7 +57,7 @@ const ModelViewer: React.FC<ModelViewerProps> = ({ modelUrl }) => {
       ) : (
         <>
           {isLoading && (
-            <div className="absolute inset-0 flex items-center justify-center">
+            <div className="absolute inset-0 flex items-center justify-center z-10">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-herb-700"></div>
             </div>
           )}
