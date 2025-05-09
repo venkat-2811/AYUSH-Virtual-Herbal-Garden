@@ -1,4 +1,3 @@
-
 import { Herb } from "@/types";
 
 // Mock data for herbs
@@ -12,7 +11,7 @@ export const HERBS_DATA: Herb[] = [
     region: ["India", "Southeast Asia"],
     composition: ["Eugenol", "Ursolic acid", "Carvacrol"],
     images: ["/herbs/tulsi.jpg"],
-    modelUrl: "/models/tulsi.glb",
+    modelUrl: null, // Model URL removed until valid models are available
     createdAt: new Date(),
     updatedAt: new Date(),
   },
@@ -25,7 +24,7 @@ export const HERBS_DATA: Herb[] = [
     region: ["India", "Middle East", "Africa"],
     composition: ["Withanolides", "Alkaloids", "Steroidal lactones"],
     images: ["/herbs/ashwagandha.jpg"],
-    modelUrl: "/models/ashwagandha.glb",
+    modelUrl: null, // Model URL removed until valid models are available
     createdAt: new Date(),
     updatedAt: new Date(),
   },

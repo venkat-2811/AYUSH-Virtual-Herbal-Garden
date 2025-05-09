@@ -1,8 +1,9 @@
 
 import React, { useState, useRef, Suspense } from 'react';
-import { Canvas, useLoader } from '@react-three/fiber';
-import { OrbitControls, useGLTF, Environment, Html } from '@react-three/drei';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { Canvas } from '@react-three/fiber';
+import { OrbitControls, Environment, Html } from '@react-three/drei';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
+import { useLoader } from '@react-three/fiber';
 
 interface ModelViewerProps {
   modelUrl: string;
@@ -13,11 +14,25 @@ const Model = ({ modelUrl }: { modelUrl: string }) => {
   const [error, setError] = useState<string | null>(null);
   
   try {
-    // Use useGLTF for better performance
-    const { scene } = useGLTF(modelUrl);
-    return <primitive object={scene} />;
+    // Use useLoader with error handling
+    const gltf = useLoader(GLTFLoader, modelUrl, undefined, (err) => {
+      console.error("Model loading failed:", err);
+      setError(`Failed to load model: ${err.message}`);
+    });
+    
+    if (error) {
+      return (
+        <Html>
+          <div className="p-4 bg-red-50 text-red-700 rounded-lg">
+            {error}
+          </div>
+        </Html>
+      );
+    }
+    
+    return <primitive object={gltf.scene} scale={1.5} />;
   } catch (err) {
-    // Handle loading errors
+    // Handle any other errors
     if (!error) {
       console.error("Error loading model:", err);
       setError(`Failed to load model: ${err instanceof Error ? err.message : String(err)}`);
@@ -26,7 +41,7 @@ const Model = ({ modelUrl }: { modelUrl: string }) => {
     return (
       <Html>
         <div className="p-4 bg-red-50 text-red-700 rounded-lg">
-          {error || "Error loading model"}
+          {error || "Error loading 3D model"}
         </div>
       </Html>
     );
@@ -37,11 +52,18 @@ const ModelViewer: React.FC<ModelViewerProps> = ({ modelUrl }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isLoading, setIsLoading] = useState(true);
   
-  // Validate model URL and file extension
+  // Check if model URL is valid before trying to load it
   const isValidModelUrl = () => {
     if (!modelUrl) return false;
-    // Check if URL ends with a common 3D model format extension
-    return /\.(glb|gltf|obj|fbx)$/i.test(modelUrl);
+    
+    // Make sure it's a local path or absolute URL
+    if (!modelUrl.startsWith('/') && !modelUrl.startsWith('http')) {
+      console.error("Invalid model URL format:", modelUrl);
+      return false;
+    }
+    
+    // Check file extension
+    return /\.(glb|gltf)$/i.test(modelUrl);
   };
 
   const handlePointerDown = () => {
@@ -51,8 +73,11 @@ const ModelViewer: React.FC<ModelViewerProps> = ({ modelUrl }) => {
   return (
     <div ref={containerRef} className="w-full h-full bg-herb-50 rounded-lg overflow-hidden relative">
       {!isValidModelUrl() ? (
-        <div className="absolute inset-0 flex items-center justify-center text-herb-500">
-          No valid 3D model available
+        <div className="absolute inset-0 flex items-center justify-center text-herb-500 flex-col">
+          <div className="mb-2">No valid 3D model available</div>
+          <div className="text-xs text-gray-400">
+            ({modelUrl ? `Invalid format: ${modelUrl}` : 'No URL provided'})
+          </div>
         </div>
       ) : (
         <>

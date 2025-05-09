@@ -1,9 +1,10 @@
+
 import React from "react";
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
-import { Leaf, MapPin, FlaskConical, Heart, Eye, View } from "lucide-react";
+import { Leaf, MapPin, FlaskConical, Heart, Eye } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/sonner";
@@ -45,7 +46,7 @@ const HerbDetail: React.FC = () => {
     }
   };
 
-  // Helper function to determine if an image URL is from Supabase Storage
+  // Improved helper function to get display image URL
   const getDisplayImageUrl = (url: string) => {
     if (!url) return "/placeholder.svg";
     
@@ -59,6 +60,12 @@ const HerbDetail: React.FC = () => {
     
     // For local assets
     return url;
+  };
+
+  // Check if model URL is valid
+  const isValidModelUrl = (url?: string) => {
+    if (!url) return false;
+    return url.startsWith('/') || url.startsWith('http');
   };
 
   if (isLoading) {
@@ -93,7 +100,7 @@ const HerbDetail: React.FC = () => {
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
         <div className="bg-white rounded-lg overflow-hidden shadow-lg">
-          {herb.modelUrl ? (
+          {isValidModelUrl(herb.modelUrl) ? (
             <div className="aspect-square bg-herb-50 flex items-center justify-center relative">
               <img 
                 src={getDisplayImageUrl(herb.images[0])} 
@@ -115,8 +122,11 @@ const HerbDetail: React.FC = () => {
                   <DialogHeader>
                     <DialogTitle>3D Model: {herb.name}</DialogTitle>
                   </DialogHeader>
-                  <div className="flex-1 h-full min-h-[500px]">
-                    <ModelViewer modelUrl={herb.modelUrl} />
+                  <div className="flex-1 h-full min-h-[500px] relative">
+                    <ModelViewer modelUrl={herb.modelUrl || ''} />
+                    <div className="absolute bottom-4 left-4 text-sm text-gray-500">
+                      Note: 3D models require WebGL support in your browser
+                    </div>
                   </div>
                 </DialogContent>
               </Dialog>
