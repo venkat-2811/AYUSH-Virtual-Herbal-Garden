@@ -45,6 +45,22 @@ const HerbDetail: React.FC = () => {
     }
   };
 
+  // Helper function to determine if an image URL is from Supabase Storage
+  const getDisplayImageUrl = (url: string) => {
+    if (!url) return "/placeholder.svg";
+    
+    // For debugging
+    console.log("Image URL:", url);
+    
+    // If the URL is already absolute (starts with http or https), use it directly
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return url;
+    }
+    
+    // For local assets
+    return url;
+  };
+
   if (isLoading) {
     return (
       <div className="container max-w-4xl mx-auto py-8 space-y-8">
@@ -80,9 +96,13 @@ const HerbDetail: React.FC = () => {
           {herb.modelUrl ? (
             <div className="aspect-square bg-herb-50 flex items-center justify-center relative">
               <img 
-                src={herb.images[0] || "/placeholder.svg"} 
+                src={getDisplayImageUrl(herb.images[0])} 
                 alt={herb.name} 
                 className="w-full h-full object-cover"
+                onError={(e) => {
+                  console.error("Image failed to load:", herb.images[0]);
+                  (e.target as HTMLImageElement).src = "/placeholder.svg";
+                }}
               />
               <Dialog>
                 <DialogTrigger asChild>
@@ -104,9 +124,13 @@ const HerbDetail: React.FC = () => {
           ) : (
             <div className="aspect-square bg-herb-50 flex items-center justify-center">
               <img 
-                src={herb.images[0] || "/placeholder.svg"} 
+                src={getDisplayImageUrl(herb.images[0])} 
                 alt={herb.name} 
                 className="w-full h-full object-cover"
+                onError={(e) => {
+                  console.error("Image failed to load:", herb.images[0]);
+                  (e.target as HTMLImageElement).src = "/placeholder.svg";
+                }}
               />
             </div>
           )}

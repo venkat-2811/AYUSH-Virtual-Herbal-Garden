@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useHerbs } from "@/contexts/HerbContext";
@@ -58,6 +57,19 @@ const ExploreHerbs = () => {
     setSelectedUse("");
     setFilters({});
     setSearchQuery("");
+  };
+
+  // Helper function to get display image URL
+  const getDisplayImageUrl = (url?: string) => {
+    if (!url) return "/placeholder.svg";
+    
+    // If the URL is already absolute (starts with http or https), use it directly
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return url;
+    }
+    
+    // For local assets
+    return url;
   };
   
   return (
@@ -155,10 +167,11 @@ const ExploreHerbs = () => {
               <div className="aspect-[4/3] bg-herb-50 relative">
                 {herb.images && herb.images.length > 0 ? (
                   <img 
-                    src={herb.images[0]} 
+                    src={getDisplayImageUrl(herb.images[0])} 
                     alt={herb.name}
                     className="w-full h-full object-cover"
                     onError={(e) => {
+                      console.error("Image failed to load:", herb.images[0]);
                       (e.target as HTMLImageElement).src = "/placeholder.svg";
                     }}
                   />
